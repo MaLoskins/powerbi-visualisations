@@ -106,6 +106,8 @@ export class Visual implements IVisual {
         this.svgEl.style.flex = "1 1 0";
         this.svgEl.style.minHeight = "0";
         this.svgEl.style.minWidth = "0";
+        this.svgEl.style.width = "100%";
+        this.svgEl.style.height = "100%";
         this.container.appendChild(this.svgEl);
 
         this.svg = scaffoldSVG(this.svgEl, 0, 0);
