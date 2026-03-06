@@ -41,12 +41,13 @@ export function renderVariancePanel(
         .attr("stroke-width", 1);
 
     /* Panel header */
+    const panelFontSize = Math.max(8, cfg.labels.labelFontSize);
     g.append("text")
         .attr("class", "variance-panel-header")
         .attr("x", panelWidth / 2)
         .attr("y", -4)
         .attr("text-anchor", "middle")
-        .attr("font-size", "9px")
+        .attr("font-size", panelFontSize + "px")
         .attr("fill", cfg.labels.labelFontColor)
         .attr("font-weight", "600")
         .text("Variance");
@@ -95,6 +96,7 @@ export function renderVariancePanel(
             .attr("rx", 1);
 
         /* Variance value label */
+        const panelLabelFontSize = Math.max(7, cfg.labels.labelFontSize - 1);
         const labelX = item.variance >= 0 ? vX + 3 : vX - 3;
         g.append("text")
             .attr("class", "variance-panel-label")
@@ -102,7 +104,7 @@ export function renderVariancePanel(
             .attr("y", cy)
             .attr("dy", "0.35em")
             .attr("text-anchor", item.variance >= 0 ? "start" : "end")
-            .attr("font-size", "8px")
+            .attr("font-size", panelLabelFontSize + "px")
             .attr("fill", vColor)
             .text(formatVariance(item.variance));
     }

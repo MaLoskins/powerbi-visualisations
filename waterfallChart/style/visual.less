@@ -7,13 +7,18 @@
 
 .waterfall-container {
     .theme-container-base();
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 /* ── SVG root ── */
 
 .waterfall-svg {
     display: block;
-    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* ── Bars ── */
@@ -58,6 +63,11 @@
 
 /* ── Axis ticks ── */
 
+.waterfall-x-axis,
+.waterfall-y-axis {
+    overflow: hidden;
+}
+
 .waterfall-x-tick text,
 .waterfall-y-tick text {
     user-select: none;
@@ -69,11 +79,16 @@
 .waterfall-legend-bottom {
     width: 100%;
     min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .waterfall-legend-item {
     white-space: nowrap;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 /* ── Error overlay ── */
@@ -81,5 +96,5 @@
 .waterfall-error {
     .theme-error-overlay();
     line-height: 1.5;
-    padding: 20px;
+    padding: 3% 5%;
 }

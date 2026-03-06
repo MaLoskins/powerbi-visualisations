@@ -47,7 +47,7 @@ export function buildPlayControls(
     container.style.padding = "6px 12px";
 
     /* ── Play/Pause button ── */
-    const playBtn = el("button", "bscatter-play-btn", "▶");
+    const playBtn = el("button", "bscatter-play-btn", "Play");
     playBtn.title = "Play";
     container.appendChild(playBtn);
 
@@ -78,7 +78,7 @@ export function buildPlayControls(
 
     function pause(): void {
         state.isPlaying = false;
-        playBtn.textContent = "▶";
+        playBtn.textContent = "Play";
         playBtn.title = "Play";
         if (state.timer !== null) {
             clearInterval(state.timer);
@@ -88,7 +88,7 @@ export function buildPlayControls(
 
     function play(): void {
         state.isPlaying = true;
-        playBtn.textContent = "⏸";
+        playBtn.textContent = "Pause";
         playBtn.title = "Pause";
         state.timer = setInterval(() => {
             const next = (state.currentIndex + 1) % playValues.length;

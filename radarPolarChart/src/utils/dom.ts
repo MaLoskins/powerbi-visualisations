@@ -22,8 +22,3 @@ export function clearChildren(node: HTMLElement | SVGElement): void {
         node.removeChild(node.firstChild);
     }
 }
-
-/** Clamp a number between min and max */
-export function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(max, value));
-}

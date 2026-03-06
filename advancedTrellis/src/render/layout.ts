@@ -32,14 +32,17 @@ export function computeGridLayout(
 
     const rows = Math.ceil(panelCount / cols);
 
-    /* Panel width: fill available space minus padding */
+    /* Panel width: fill available space minus padding.
+       The grid uses CSS flex with `gap` (cols-1 inner gaps) plus `padding`
+       (one on each edge), giving (cols - 1) + 2 = (cols + 1) padding units. */
     const totalHPadding = cfg.panelPadding * (cols + 1);
     const panelWidth = Math.max(
         cfg.panelMinWidth,
         Math.floor((viewportWidth - totalHPadding) / cols),
     );
 
-    /* Panel height: try to fill viewport, but respect minimum */
+    /* Panel height: try to fill viewport, but respect minimum.
+       Same logic: (rows - 1) inner gaps + 2 outer edges = (rows + 1) units. */
     const totalVPadding = cfg.panelPadding * (rows + 1);
     const idealHeight = Math.floor((viewportHeight - totalVPadding) / rows);
     const panelHeight = Math.max(cfg.panelMinHeight, idealHeight);

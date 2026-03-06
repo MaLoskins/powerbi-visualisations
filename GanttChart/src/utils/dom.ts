@@ -17,5 +17,5 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 
 /** Remove all child nodes. */
 export function clearChildren(parent: HTMLElement): void {
-    while (parent.firstChild) parent.removeChild(parent.firstChild);
+    parent.textContent = "";
 }

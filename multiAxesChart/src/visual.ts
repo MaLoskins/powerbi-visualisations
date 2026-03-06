@@ -260,7 +260,7 @@ export class Visual implements IVisual {
             const val = cat.values[m];
             items.push({
                 displayName: this.data.measureNames[m],
-                value: val != null ? String(val) : "—",
+                value: val != null ? String(val) : "N/A",
                 color: this.cfg.series[m].color,
             });
         }

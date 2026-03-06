@@ -66,7 +66,6 @@ export class Visual implements IVisual {
     private items: GaugeItem[] = [];
     private renderConfig: RenderConfig | null = null;
     private hasRenderedOnce = false;
-    private lastViewport: powerbi.IViewport = { width: 0, height: 0 };
 
     /* ── Cached callbacks (created once, not per-render) ── */
     private callbacks: GaugeCallbacks;
@@ -149,8 +148,6 @@ export class Visual implements IVisual {
             /* ── Determine what changed ── */
             const updateType = options.type ?? 0;
             const hasData = (updateType & 2) !== 0;
-            const isResizeOnly = !hasData && (updateType & (4 | 16)) !== 0;
-
             /* ── Data pipeline (only when data actually changed) ── */
             if (hasData || !this.hasRenderedOnce) {
                 if (!dv?.table) {
@@ -170,9 +167,6 @@ export class Visual implements IVisual {
                 const result: ParseResult = parseRows(table, cols, this.host);
                 this.items = result.items;
             }
-
-            /* ── Store viewport ── */
-            this.lastViewport = options.viewport;
 
             /* ── Render ── */
             this.fullRender(options.viewport);
@@ -231,7 +225,8 @@ export class Visual implements IVisual {
         const bottomLabelH = computeMinMaxLabelHeight(cfg);
 
         /* ── Bar area dimensions ── */
-        const barAreaWidth = Math.max(20, vw - catW - leftLabelW - rightLabelW - 4);
+        const hPad = Math.max(2, Math.round(vw * 0.005));
+        const barAreaWidth = Math.max(20, vw - catW - leftLabelW - rightLabelW - hPad);
         const totalGaugeHeight = items.length * (cfg.layout.gaugeHeight + cfg.layout.gaugeSpacing) - cfg.layout.gaugeSpacing;
         const svgW = barAreaWidth + leftLabelW + rightLabelW;
         const svgH = Math.max(totalGaugeHeight + topLabelH + bottomLabelH, 20);
@@ -242,6 +237,8 @@ export class Visual implements IVisual {
         this.svgContainer.style.overflow = "auto";
         this.svgContainer.style.height = vh + "px";
         this.container.style.flexDirection = "row";
+        this.container.style.justifyContent = "center";
+        this.container.style.alignItems = svgH < vh ? "center" : "flex-start";
 
         /* ── Size SVG ── */
         this.svg.attr("width", svgW).attr("height", svgH);
@@ -285,10 +282,13 @@ export class Visual implements IVisual {
         this.svgContainer.style.overflow = "auto";
         this.svgContainer.style.height = vh + "px";
         this.container.style.flexDirection = "column";
+        this.container.style.justifyContent = "center";
+        this.container.style.alignItems = "center";
 
         const catH = computeVerticalCategoryHeight(cfg);
         const topLabelH = computeTopLabelHeight(cfg);
-        const barAreaHeight = Math.max(20, vh - catH - topLabelH - 8);
+        const vPad = Math.max(2, Math.round(vh * 0.01));
+        const barAreaHeight = Math.max(20, vh - catH - topLabelH - vPad);
         const totalGaugeWidth = items.length * (cfg.layout.gaugeHeight + cfg.layout.gaugeSpacing) - cfg.layout.gaugeSpacing;
         const svgW = Math.max(totalGaugeWidth, 20);
         const svgH = barAreaHeight + catH + topLabelH;

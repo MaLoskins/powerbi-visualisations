@@ -30,6 +30,8 @@ import {
     Y_TICK_LABEL_OFFSET,
     X_TICK_LABEL_OFFSET,
     X_LABEL_MAX_CHARS,
+    X_LABEL_ROTATE_90_MARGIN,
+    X_LABEL_ROTATE_45_MARGIN,
 } from "../constants";
 
 /* ── Scale type aliases ── */
@@ -81,7 +83,8 @@ export function renderChart(
     const mb = cfg.axis.showXAxis ? X_AXIS_HEIGHT + PANEL_MARGIN.bottom : PANEL_MARGIN.bottom;
 
     const xLabelRotation = Number(cfg.axis.xLabelRotation);
-    const extraXMargin = xLabelRotation === 90 ? 16 : xLabelRotation === 45 ? 10 : 0;
+    const extraXMargin = xLabelRotation === 90 ? X_LABEL_ROTATE_90_MARGIN
+        : xLabelRotation === 45 ? X_LABEL_ROTATE_45_MARGIN : 0;
     const plotW = Math.max(10, width - ml - mr);
     const plotH = Math.max(10, height - mt - mb - extraXMargin);
 
@@ -97,15 +100,21 @@ export function renderChart(
         .nice();
 
     /* ── Clip path to prevent content overflow ── */
+    /* Extend clip rect upward by the data-label font size so labels
+       positioned just above the top bar are not cut off, while still
+       preventing them from bleeding into the title bar. */
+    const labelOverflow = cfg.labels.showDataLabels
+        ? cfg.labels.dataLabelFontSize + DATA_LABEL_OFFSET_Y
+        : 0;
     const clipId = `${CLIP_ID_PREFIX}${panel.trellisValue.replace(/\s+/g, "-")}`;
     d3svg.append("defs")
         .append("clipPath")
         .attr("id", clipId)
         .append("rect")
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", -labelOverflow)
         .attr("width", plotW)
-        .attr("height", plotH);
+        .attr("height", plotH + labelOverflow);
 
     /* ── Chart group ── */
     const g = d3svg
@@ -147,23 +156,23 @@ export function renderChart(
     /* ── Render chart type ── */
     const chartType = cfg.chart.chartType;
     if (chartType === "bar") {
-        renderBars(plotG, panel, xScale, yScale, plotH, cfg, callbacks);
+        renderBars(plotG, panel, xScale, yScale, cfg, callbacks);
     } else if (chartType === "line") {
         renderLines(plotG, panel, xScale, yScale, cfg, callbacks);
     } else if (chartType === "area") {
-        renderAreas(plotG, panel, xScale, yScale, plotH, cfg, callbacks);
+        renderAreas(plotG, panel, xScale, yScale, cfg, callbacks);
     } else if (chartType === "lollipop") {
-        renderLollipops(plotG, panel, xScale, yScale, plotH, cfg, callbacks);
+        renderLollipops(plotG, panel, xScale, yScale, cfg, callbacks);
     }
 
-    /* ── Data labels ── */
+    /* ── Data labels (rendered inside clipped group to prevent overflow) ── */
     if (cfg.labels.showDataLabels) {
-        renderDataLabels(g, panel, xScale, yScale, cfg);
+        renderDataLabels(plotG, panel, xScale, yScale, plotH, plotW, cfg);
     }
 
     /* ── Axes ── */
     if (cfg.axis.showXAxis) {
-        renderXAxis(g, panel.categories as string[], xScale, plotH, cfg, extraXMargin);
+        renderXAxis(g, panel.categories as string[], xScale, plotH, cfg);
     }
 
     if (cfg.axis.showYAxis) {
@@ -178,7 +187,6 @@ function renderBars(
     panel: TrellisPanel,
     xScale: XScale,
     yScale: YScale,
-    plotH: number,
     cfg: RenderConfig,
     callbacks: PanelCallbacks,
 ): void {
@@ -227,9 +235,6 @@ function renderBars(
                 });
         }
     }
-
-    /* Suppress unused plotH warning — kept for API consistency */
-    void plotH;
 }
 
 /* ── Line Renderer ── */
@@ -284,7 +289,6 @@ function renderAreas(
     panel: TrellisPanel,
     xScale: XScale,
     yScale: YScale,
-    plotH: number,
     cfg: RenderConfig,
     callbacks: PanelCallbacks,
 ): void {
@@ -334,9 +338,6 @@ function renderAreas(
             renderDots(g, sorted, xScale, yScale, areaColor, cfg, callbacks);
         }
     }
-
-    /* Suppress unused plotH warning — kept for API consistency */
-    void plotH;
 }
 
 /* ── Lollipop Renderer ── */
@@ -346,7 +347,6 @@ function renderLollipops(
     panel: TrellisPanel,
     xScale: XScale,
     yScale: YScale,
-    plotH: number,
     cfg: RenderConfig,
     callbacks: PanelCallbacks,
 ): void {
@@ -404,8 +404,6 @@ function renderLollipops(
         }
     }
 
-    /* Suppress unused plotH warning — kept for API consistency */
-    void plotH;
 }
 
 /* ── Shared Dot Renderer (Line / Area) ── */
@@ -454,11 +452,21 @@ function renderDataLabels(
     panel: TrellisPanel,
     xScale: XScale,
     yScale: YScale,
+    plotH: number,
+    plotW: number,
     cfg: RenderConfig,
 ): void {
+    const fontSize = cfg.labels.dataLabelFontSize;
+    /* Approximate half-width of a label for horizontal clamping */
+    const estHalfWidth = fontSize * 2;
+
     for (const pt of panel.dataPoints) {
-        const cx = (xScale(pt.categoryValue) ?? 0) + xScale.bandwidth() / 2;
-        const cy = yScale(pt.value) - DATA_LABEL_OFFSET_Y;
+        const rawX = (xScale(pt.categoryValue) ?? 0) + xScale.bandwidth() / 2;
+        /* Clamp label within the plot area horizontally */
+        const cx = Math.max(estHalfWidth, Math.min(rawX, plotW - estHalfWidth));
+        /* Clamp label within the plot area vertically */
+        const rawY = yScale(pt.value) - DATA_LABEL_OFFSET_Y;
+        const cy = Math.max(fontSize, Math.min(rawY, plotH - DATA_LABEL_OFFSET_Y));
 
         g.append("text")
             .attr("class", "trellis-data-label")
@@ -466,7 +474,7 @@ function renderDataLabels(
             .attr("y", cy)
             .attr("text-anchor", "middle")
             .attr("fill", cfg.labels.dataLabelFontColor)
-            .attr("font-size", `${cfg.labels.dataLabelFontSize}px`)
+            .attr("font-size", `${fontSize}px`)
             .text(formatValue(pt.value));
     }
 }
@@ -479,7 +487,6 @@ function renderXAxis(
     xScale: XScale,
     plotH: number,
     cfg: RenderConfig,
-    _extraXMargin: number,
 ): void {
     const rotation = Number(cfg.axis.xLabelRotation);
     const axisG = g.append("g")

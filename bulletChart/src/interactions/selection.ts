@@ -7,7 +7,7 @@
 "use strict";
 
 import { BulletItem } from "../types";
-import { DIM_OPACITY } from "../constants";
+import { UNSELECTED_OPACITY } from "../constants";
 
 import powerbi from "powerbi-visuals-api";
 import ISelectionId = powerbi.visuals.ISelectionId;
@@ -31,7 +31,7 @@ export function applySelectionStyles(
         const isSelected = selectedSet.has(JSON.stringify(item.selectionId.getKey()));
 
         if (hasSelection) {
-            row.style.opacity = isSelected ? "1" : String(DIM_OPACITY);
+            row.style.opacity = isSelected ? "1" : String(UNSELECTED_OPACITY);
 
             /* Highlight selected actual bar */
             if (isSelected) {

@@ -8,7 +8,15 @@ import type { RenderConfig, ChartLayout, ChartType } from "../types";
 
 type SvgSel = Selection<SVGGElement, unknown, null, undefined>;
 
-/** Render the legend showing one entry per active measure. */
+/** Truncate a string to fit within a max character count, appending "..." if needed. */
+function truncateLegendLabel(label: string, maxChars: number): string {
+    if (maxChars < 4) maxChars = 4;
+    if (label.length <= maxChars) return label;
+    return label.slice(0, maxChars - 3) + "...";
+}
+
+/** Render the legend showing one entry per active measure.
+ *  Clips entries that would exceed the available chart width. */
 export function renderLegend(
     g: SvgSel,
     measureNames: string[],
@@ -24,29 +32,40 @@ export function renderLegend(
 
     let xCursor = layout.chartLeft;
     const fontSize = cfg.legend.legendFontSize;
-    const gap = 20;
-    const iconSize = 12;
+    const gap = Math.max(10, Math.min(24, fontSize * 1.6));
+    const iconSize = Math.max(8, Math.min(16, fontSize * 1.2));
+    const avgCharWidth = fontSize * 0.55;
+
+    // Available width for legend items
+    const maxX = layout.chartLeft + layout.chartWidth;
 
     for (let m = 0; m < measureCount; m++) {
         const s = cfg.series[m];
         if (s.chartType === "none") continue;
 
+        // Check if there is room for at least an icon + a few characters
+        const minEntryWidth = iconSize + 4 + avgCharWidth * 4;
+        if (xCursor + minEntryWidth > maxX) break; // stop rendering legend items
+
         /* ── Icon ── */
         renderLegendIcon(g, s.chartType, xCursor, baseY - iconSize / 2, iconSize, s.color);
         xCursor += iconSize + 4;
 
-        /* ── Label ── */
-        const label = g.append("text")
+        /* ── Label (truncate to fit remaining space) ── */
+        const remainingPx = maxX - xCursor - gap;
+        const maxChars = Math.max(4, Math.floor(remainingPx / avgCharWidth));
+        const displayText = truncateLegendLabel(measureNames[m], maxChars);
+
+        g.append("text")
             .attr("class", "maxes-legend-label")
             .attr("x", xCursor)
             .attr("y", baseY)
             .attr("dominant-baseline", "central")
             .attr("fill", cfg.legend.legendFontColor)
             .attr("font-size", fontSize + "px")
-            .text(measureNames[m]);
+            .text(displayText);
 
-        // Estimate text width (approximate)
-        const textWidth = measureNames[m].length * fontSize * 0.6;
+        const textWidth = displayText.length * avgCharWidth;
         xCursor += textWidth + gap;
     }
 }

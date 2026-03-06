@@ -9,7 +9,7 @@
 import { RenderConfig, BulletItem } from "../types";
 import { niceTickValues, formatValue } from "../utils/format";
 import { SVG_NS } from "../utils/dom";
-import { AXIS_AREA_SIZE, MIN_TICK_SPACING } from "../constants";
+import { AXIS_AREA_SIZE, MIN_TICK_SPACING, FONT_STACK } from "../constants";
 
 /* ═══════════════════════════════════════════════
    Horizontal Axis (bottom)
@@ -60,7 +60,7 @@ export function renderHorizontalAxis(
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("fill", cfg.axis.axisFontColor);
             text.setAttribute("font-size", cfg.axis.axisFontSize + "px");
-            text.setAttribute("font-family", '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif');
+            text.setAttribute("font-family", FONT_STACK);
             text.textContent = formatValue(t);
             svg.appendChild(text);
         }
@@ -112,12 +112,12 @@ export function renderVerticalAxis(
             if (y < 0 || y > chartHeight) continue;
             const text = document.createElementNS(SVG_NS, "text");
             text.setAttribute("class", "bullet-axis-tick");
-            text.setAttribute("x", String(axisAreaWidth - 4));
+            text.setAttribute("x", String(axisAreaWidth - Math.max(3, Math.round(cfg.axis.axisFontSize * 0.4))));
             text.setAttribute("y", String(y + cfg.axis.axisFontSize * 0.35));
             text.setAttribute("text-anchor", "end");
             text.setAttribute("fill", cfg.axis.axisFontColor);
             text.setAttribute("font-size", cfg.axis.axisFontSize + "px");
-            text.setAttribute("font-family", '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif');
+            text.setAttribute("font-family", FONT_STACK);
             text.textContent = formatValue(t);
             svg.appendChild(text);
         }
@@ -137,24 +137,32 @@ export function renderVerticalCategoryLabels(
 ): void {
     if (!cfg.layout.showCategoryLabels) return;
 
-    const { bulletHeight: bulletWidth, bulletSpacing } = cfg.layout;
+    const { bulletHeight: bulletWidth, bulletSpacing, categoryFontSize } = cfg.layout;
+    const labelOffsetY = Math.round(categoryFontSize * 1.3);
 
     for (let i = 0; i < items.length; i++) {
         const xCenter = i * (bulletWidth + bulletSpacing) + bulletWidth / 2;
+        const estimatedTextWidth = items[i].category.length * categoryFontSize * 0.6;
+        const needsRotation = estimatedTextWidth > bulletWidth;
+
         const text = document.createElementNS(SVG_NS, "text");
         text.setAttribute("class", "bullet-cat-label-v");
         text.setAttribute("x", String(xCenter));
-        text.setAttribute("y", String(chartHeight + 14));
-        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("y", String(chartHeight + labelOffsetY));
+        text.setAttribute("text-anchor", needsRotation ? "end" : "middle");
         text.setAttribute("fill", cfg.layout.categoryFontColor);
-        text.setAttribute("font-size", cfg.layout.categoryFontSize + "px");
-        text.setAttribute("font-family", '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif');
-        text.textContent = items[i].category;
+        text.setAttribute("font-size", categoryFontSize + "px");
+        text.setAttribute("font-family", FONT_STACK);
 
-        /* Rotate label if wider than column */
-        if (items[i].category.length * cfg.layout.categoryFontSize * 0.6 > bulletWidth) {
-            text.setAttribute("transform", `rotate(-45, ${xCenter}, ${chartHeight + 14})`);
-            text.setAttribute("text-anchor", "end");
+        /* Truncate long labels that would overflow even when rotated */
+        const maxChars = needsRotation
+            ? Math.floor(bulletWidth * 2 / (categoryFontSize * 0.6))
+            : Math.floor(bulletWidth / (categoryFontSize * 0.6));
+        const label = items[i].category;
+        text.textContent = label.length > maxChars ? label.slice(0, maxChars - 1) + "\u2026" : label;
+
+        if (needsRotation) {
+            text.setAttribute("transform", `rotate(-45, ${xCenter}, ${chartHeight + labelOffsetY})`);
         }
 
         svg.appendChild(text);

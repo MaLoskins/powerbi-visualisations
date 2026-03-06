@@ -127,7 +127,7 @@ export const MARGIN = {
     left: 50,
 } as const;
 
-/** Legend height in px */
+/** Minimum legend height in px (actual height scales with font size) */
 export const LEGEND_HEIGHT = 28;
 
 /** Minimum band width before enabling scroll */

@@ -26,7 +26,7 @@ import { renderConnectors } from "./render/connectors";
 import { renderValueLabels, renderRunningTotalLabels } from "./render/labels";
 import { renderLegend } from "./render/legend";
 import { applySelectionStyles, buildSelectedKeySet } from "./interactions/selection";
-import { CSS_PREFIX, CHART_MARGINS, LEGEND_HEIGHT } from "./constants";
+import { CSS_PREFIX, CHART_MARGIN_FRACTIONS, CHART_MARGIN_MIN, CHART_MARGIN_MAX, LEGEND_HEIGHT_FRACTION, LEGEND_HEIGHT_MIN, LEGEND_HEIGHT_MAX } from "./constants";
 import { el } from "./utils/dom";
 import { formatValue, formatPercent } from "./utils/format";
 
@@ -183,8 +183,10 @@ export class Visual implements IVisual {
         this.container.style.width = width + "px";
         this.container.style.height = height + "px";
 
-        /* ── Legend space ── */
-        const legendHeight = cfg.legend.showLegend ? LEGEND_HEIGHT : 0;
+        /* ── Legend space (responsive) ── */
+        const legendHeight = cfg.legend.showLegend
+            ? Math.max(LEGEND_HEIGHT_MIN, Math.min(LEGEND_HEIGHT_MAX, Math.round(height * LEGEND_HEIGHT_FRACTION)))
+            : 0;
         const isLegendTop = cfg.legend.legendPosition === "top";
 
         const topLegendH = isLegendTop ? legendHeight : 0;
@@ -204,20 +206,20 @@ export class Visual implements IVisual {
         this.svgRoot.setAttribute("width", String(svgWidth));
         this.svgRoot.setAttribute("height", String(Math.max(0, svgHeight)));
 
-        /* ── Margins ── */
+        /* ── Margins (responsive) ── */
         const isVertical = cfg.chart.orientation === "vertical";
-        const xAxisSpace = cfg.axis.showXAxis ? computeXAxisHeight(cfg) : 0;
-        const yAxisSpace = cfg.axis.showYAxis ? 50 : 0;
+        const xAxisSpace = cfg.axis.showXAxis ? computeXAxisHeight(cfg, svgHeight) : 0;
+        const yAxisSpace = cfg.axis.showYAxis ? responsiveMargin(svgWidth, 0.07, 20, 60) : 0;
 
-        const marginTop = CHART_MARGINS.top;
-        const marginRight = CHART_MARGINS.right;
-        const marginBottom = CHART_MARGINS.bottom + xAxisSpace;
-        const marginLeft = CHART_MARGINS.left + yAxisSpace;
+        const marginTop = responsiveMargin(svgHeight, CHART_MARGIN_FRACTIONS.top, CHART_MARGIN_MIN.top, CHART_MARGIN_MAX.top);
+        const marginRight = responsiveMargin(svgWidth, CHART_MARGIN_FRACTIONS.right, CHART_MARGIN_MIN.right, CHART_MARGIN_MAX.right);
+        const marginBottom = responsiveMargin(svgHeight, CHART_MARGIN_FRACTIONS.bottom, CHART_MARGIN_MIN.bottom, CHART_MARGIN_MAX.bottom) + xAxisSpace;
+        const marginLeft = responsiveMargin(svgWidth, CHART_MARGIN_FRACTIONS.left, CHART_MARGIN_MIN.left, CHART_MARGIN_MAX.left) + yAxisSpace;
 
-        const mTop = isVertical ? marginTop : marginTop;
+        const mTop = marginTop;
         const mRight = isVertical ? marginRight : marginRight + xAxisSpace;
-        const mBottom = isVertical ? marginBottom : CHART_MARGINS.bottom;
-        const mLeft = isVertical ? marginLeft : marginLeft;
+        const mBottom = isVertical ? marginBottom : responsiveMargin(svgHeight, CHART_MARGIN_FRACTIONS.bottom, CHART_MARGIN_MIN.bottom, CHART_MARGIN_MAX.bottom);
+        const mLeft = marginLeft;
 
         const plotWidth = Math.max(0, svgWidth - mLeft - mRight);
         const plotHeight = Math.max(0, svgHeight - mTop - mBottom);
@@ -229,7 +231,7 @@ export class Visual implements IVisual {
         const scales = buildScales(this.bars, valueDomain, plotWidth, plotHeight, cfg);
 
         /* ── Render layers ── */
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- d3 Selection generics workaround
+        /* eslint-disable @typescript-eslint/no-explicit-any -- d3 Selection generics workaround */
         const gGrid = select(this.gridlineGroup) as any;
         const gBase = select(this.baselineGroup) as any;
         const gConn = select(this.connectorGroup) as any;
@@ -238,6 +240,7 @@ export class Visual implements IVisual {
         const gRLabels = select(this.runningLabelGroup) as any;
         const gXAxis = select(this.xAxisGroup) as any;
         const gYAxis = select(this.yAxisGroup) as any;
+        /* eslint-enable @typescript-eslint/no-explicit-any */
 
         renderGridlines(gGrid, scales, plotWidth, plotHeight, cfg);
         renderBaseline(gBase, scales, plotWidth, plotHeight, cfg);
@@ -344,9 +347,14 @@ export class Visual implements IVisual {
 
 /* ── Helpers ── */
 
-function computeXAxisHeight(cfg: RenderConfig): number {
+/** Compute a responsive margin: fraction of dimension, clamped between min and max. */
+function responsiveMargin(dimension: number, fraction: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, Math.round(dimension * fraction)));
+}
+
+/** Compute X-axis height proportionally based on rotation and viewport. */
+function computeXAxisHeight(cfg: RenderConfig, viewportHeight: number): number {
     const rotation = parseInt(cfg.axis.xLabelRotation, 10);
-    if (rotation >= 90) return 60;
-    if (rotation >= 45) return 40;
-    return 20;
+    const fraction = rotation >= 90 ? 0.10 : rotation >= 45 ? 0.07 : 0.04;
+    return responsiveMargin(viewportHeight, fraction, 16, 70);
 }

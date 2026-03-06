@@ -100,6 +100,7 @@ export interface RenderConfig {
         sortSlices: SortMode;
         showOuterRing: boolean;
         outerRingThicknessFraction: number; /* 0-1 */
+        arcStrokeColor: string;        /* stroke colour between slices */
     };
     color: {
         colorPalette: ColorPalette;

@@ -42,6 +42,7 @@ export function renderValueLabels(
             const el = this as SVGTextElement;
             const rect = computeBarRect(d, scales, isVertical);
             const pos = effectiveLabelPosition(d, scales, isVertical, cfg.labels.labelPosition);
+            const labelGap = Math.max(3, cfg.labels.labelFontSize * 0.5);
 
             if (isVertical) {
                 el.setAttribute("x", String(rect.x + rect.width / 2));
@@ -50,7 +51,7 @@ export function renderValueLabels(
                 } else {
                     /* Above: place above the higher end of the bar */
                     const isPositive = d.top >= d.base;
-                    el.setAttribute("y", String(isPositive ? rect.y - 6 : rect.y + rect.height + 12));
+                    el.setAttribute("y", String(isPositive ? rect.y - labelGap : rect.y + rect.height + labelGap + cfg.labels.labelFontSize));
                 }
             } else {
                 el.setAttribute("y", String(rect.y + rect.height / 2));
@@ -58,21 +59,33 @@ export function renderValueLabels(
                     el.setAttribute("x", String(rect.x + rect.width / 2));
                 } else {
                     const isPositive = d.top >= d.base;
-                    el.setAttribute("x", String(isPositive ? rect.x + rect.width + 6 : rect.x - 6));
+                    el.setAttribute("x", String(isPositive ? rect.x + rect.width + labelGap : rect.x - labelGap));
                     el.setAttribute("text-anchor", isPositive ? "start" : "end");
                 }
             }
         })
-        .text((d) => {
+        .each(function (d) {
             /* For total bars, show the total value rather than incremental */
             const showVal = d.barType === "total" || d.barType === "start"
                 ? d.runningTotal
                 : d.value;
-            return formatValue(
+            const labelText = formatValue(
                 showVal,
                 cfg.labels.valueFormat,
                 cfg.labels.showPlusMinus && d.barType !== "total" && d.barType !== "start",
             );
+            const el = this as SVGTextElement;
+            el.textContent = labelText;
+
+            /* Truncate if label exceeds bar width (for inside labels) */
+            const rect = computeBarRect(d, scales, isVertical);
+            const maxWidth = isVertical ? rect.width : rect.height;
+            const pos = effectiveLabelPosition(d, scales, isVertical, cfg.labels.labelPosition);
+            if (pos === "inside" && el.getComputedTextLength && el.getComputedTextLength() > maxWidth) {
+                while (el.textContent && el.textContent.length > 1 && el.getComputedTextLength() > maxWidth) {
+                    el.textContent = el.textContent.slice(0, -2) + "\u2026";
+                }
+            }
         });
 }
 
@@ -104,14 +117,15 @@ export function renderRunningTotalLabels(
             const el = this as SVGTextElement;
             const catPos = (scales.categoryScale(d.category) ?? 0) + bandwidth;
             const valPos = scales.valueScale(d.runningTotal);
+            const labelOffset = Math.max(2, cfg.labels.labelFontSize * 0.3);
 
             if (isVertical) {
-                el.setAttribute("x", String(catPos + 2));
-                el.setAttribute("y", String(valPos - 4));
+                el.setAttribute("x", String(catPos + labelOffset));
+                el.setAttribute("y", String(valPos - labelOffset));
                 el.setAttribute("text-anchor", "start");
             } else {
                 el.setAttribute("x", String(valPos));
-                el.setAttribute("y", String(catPos + 12));
+                el.setAttribute("y", String(catPos + cfg.labels.labelFontSize + labelOffset));
                 el.setAttribute("text-anchor", "middle");
             }
         })

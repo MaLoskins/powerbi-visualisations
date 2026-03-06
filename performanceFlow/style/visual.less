@@ -61,12 +61,15 @@
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    /* SVG text elements are truncated in code; this is a safety net */
+    overflow: hidden;
 }
 
 .pflow-value-label {
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    overflow: hidden;
 }
 
 /* ── SVG Groups: GPU compositing hint ── */

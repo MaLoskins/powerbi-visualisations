@@ -7,8 +7,15 @@
 import { select, Selection } from "d3-selection";
 import { ScaleLinear, ScaleBand } from "d3-scale";
 import type { RenderConfig, YAxisConfig, ChartLayout, LabelRotation } from "../types";
-import { TICK_COUNT, SLATE } from "../constants";
+import { TICK_COUNT, SLATE, Y_AXIS_WIDTH_BASE } from "../constants";
 import { formatAxisValue } from "../utils/format";
+
+/** Estimate the max number of characters that fit in a given pixel width at a given font size. */
+function maxCharsForWidth(availablePx: number, fontSize: number): number {
+    // Average character width is roughly 0.55 * fontSize for Segoe UI
+    const avgCharWidth = fontSize * 0.55;
+    return Math.max(4, Math.floor(availablePx / avgCharWidth));
+}
 
 type SvgSel = Selection<SVGGElement, unknown, null, undefined>;
 
@@ -87,12 +94,17 @@ export function renderYAxis(
 
     /* ── Axis label (rotated text) ── */
     if (cfg.axisLabel) {
+        // Proportional offset: 80% of the axis width, clamped between 24px and the axis width
+        const axisWidth = isRight ? layout.rightAxisWidth : layout.leftPrimaryAxisWidth || Y_AXIS_WIDTH_BASE;
+        const labelOffset = Math.max(24, Math.min(axisWidth, axisWidth * 0.8));
         const labelX = isRight
-            ? xPos + 40
-            : side === "leftSecondary"
-                ? xPos - 40
-                : xPos - 40;
+            ? xPos + labelOffset
+            : xPos - labelOffset;
         const labelY = layout.chartTop + layout.chartHeight / 2;
+
+        // Truncate axis title if it would overflow the chart height
+        const maxTitleChars = maxCharsForWidth(layout.chartHeight, cfg.axisFontSize + 1);
+        const titleText = truncateLabel(cfg.axisLabel, maxTitleChars);
 
         g.append("text")
             .attr("class", "maxes-axis-title")
@@ -104,7 +116,7 @@ export function renderYAxis(
             .attr("fill", cfg.axisFontColor)
             .attr("font-size", (cfg.axisFontSize + 1) + "px")
             .attr("font-weight", "600")
-            .text(cfg.axisLabel);
+            .text(titleText);
     }
 }
 
@@ -136,6 +148,15 @@ export function renderXAxis(
     /* ── Tick labels ── */
     const rotation = parseInt(cfg.xLabelRotation, 10) || 0;
 
+    // Dynamic truncation limit: compute max chars that fit within the bandwidth
+    // For rotated labels, allow more characters since they occupy vertical space
+    const availableWidth = rotation === 0
+        ? bandwidth
+        : rotation === 45
+            ? bandwidth * 1.8
+            : layout.xAxisHeight * 1.5;
+    const dynamicMaxChars = maxCharsForWidth(availableWidth, cfg.xAxisFontSize);
+
     for (const cat of categories) {
         const x = (xScale(cat) ?? 0) + bandwidth / 2;
 
@@ -145,7 +166,7 @@ export function renderXAxis(
             .attr("y", y + 14)
             .attr("fill", cfg.xAxisFontColor)
             .attr("font-size", cfg.xAxisFontSize + "px")
-            .text(truncateLabel(cat, 20));
+            .text(truncateLabel(cat, dynamicMaxChars));
 
         if (rotation === 0) {
             label.attr("text-anchor", "middle");
@@ -172,8 +193,10 @@ export function renderXAxis(
     }
 }
 
-/** Truncate a label for axis display. */
+/** Truncate a label for axis display.
+ *  Uses "..." (three ASCII dots) for maximum font/rendering compatibility. */
 function truncateLabel(label: string, maxLen: number): string {
+    if (maxLen < 4) maxLen = 4; // minimum meaningful truncation
     if (label.length <= maxLen) return label;
-    return label.slice(0, maxLen - 1) + "…";
+    return label.slice(0, maxLen - 3) + "...";
 }

@@ -113,14 +113,36 @@ export const FONT_STACK = '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", H
 /** Minimum gap between outside labels (multiplied by font size) (L1) */
 export const LABEL_GAP_FACTOR = 1.25;
 
-/** Radial extension for leader line first segment (L2) */
+/** Radial extension for leader line first segment (L2) – base value at radius ~100 */
 export const LEADER_LINE_EXTEND = 12;
 
-/** Horizontal extension for leader line second segment (L3) */
+/** Horizontal extension for leader line second segment (L3) – base value at radius ~100 */
 export const LEADER_LINE_HORIZONTAL = 18;
 
-/** Padding around the chart area to make room for labels (L4) */
+/** Base padding around the chart area to make room for labels (L4) */
 export const LABEL_PADDING = 60;
+
+/** Reference radius used for scaling leader lines (L2/L3) */
+const LEADER_LINE_REFERENCE_RADIUS = 100;
+
+/** Compute scaled leader-line radial extension based on chart outer radius */
+export function scaledLeaderLineExtend(outerRadius: number): number {
+    const scale = Math.max(0.4, outerRadius / LEADER_LINE_REFERENCE_RADIUS);
+    return Math.round(LEADER_LINE_EXTEND * scale);
+}
+
+/** Compute scaled leader-line horizontal extension based on chart outer radius */
+export function scaledLeaderLineHorizontal(outerRadius: number): number {
+    const scale = Math.max(0.4, outerRadius / LEADER_LINE_REFERENCE_RADIUS);
+    return Math.round(LEADER_LINE_HORIZONTAL * scale);
+}
+
+/** Compute dynamic label padding that scales with viewport size */
+export function dynamicLabelPadding(viewportWidth: number, viewportHeight: number): number {
+    const minDim = Math.min(viewportWidth, viewportHeight);
+    /* Scale from 20px at small sizes up to 60px at large sizes */
+    return Math.max(20, Math.min(LABEL_PADDING, minDim * 0.15));
+}
 
 /** Padding around the chart area when labels are hidden */
 export const CHART_PADDING = 16;

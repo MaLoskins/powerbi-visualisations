@@ -20,12 +20,21 @@ export function computeRadarLayout(
     const numAxes = data.axes.length;
 
     /* ── Determine available radius ── */
+    const minDim = Math.min(width, height);
+
+    /* Legend reservation scales with viewport so it doesn't eat too much
+       space in small visuals or look tiny in large ones. */
     const legendReserve = cfg.legend.showLegend
-        ? (cfg.legend.legendPosition === "right" ? 80 : 28)
+        ? (cfg.legend.legendPosition === "right"
+            ? Math.max(60, Math.min(minDim * 0.15, 120))
+            : Math.max(20, Math.min(minDim * 0.07, 40)))
         : 0;
+
+    /* Label reservation: font size + padding, proportional minimum */
     const labelReserve = cfg.axisLabel.showAxisLabels
-        ? cfg.axisLabel.axisFontSize + cfg.axisLabel.labelPadding + 8
-        : 10;
+        ? cfg.axisLabel.axisFontSize + cfg.axisLabel.labelPadding + Math.max(4, minDim * 0.02)
+        : Math.max(6, minDim * 0.02);
+
     const hPad = cfg.legend.showLegend && cfg.legend.legendPosition === "right"
         ? legendReserve + labelReserve
         : labelReserve * 2;

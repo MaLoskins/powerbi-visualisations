@@ -8,12 +8,14 @@
 
 .maxes-container {
     .theme-container-base();
+    overflow: hidden;
 }
 
 .maxes-svg {
     display: block;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 /* ── Error Overlay ── */
@@ -61,18 +63,24 @@
     font-family: @font-stack;
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .maxes-axis-title {
     font-family: @font-stack;
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .maxes-x-label {
     font-family: @font-stack;
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Gridlines ── */
@@ -91,6 +99,8 @@
     font-family: @font-stack;
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Data Labels ── */

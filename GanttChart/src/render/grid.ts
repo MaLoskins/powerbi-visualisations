@@ -1,5 +1,4 @@
-import type { GanttTask, RenderConfig, DateFormat } from "../types";
-import { STATUS_COLORS } from "../constants";
+import type { GanttTask, RenderConfig } from "../types";
 import { formatDateCustom } from "../utils/date";
 import { el, clearChildren } from "../utils/dom";
 import { resolveStatusColor } from "../utils/color";
@@ -67,10 +66,10 @@ export function renderGridBody(
 
         /* Name cell */
         const nameCell = el("span", "gantt-grid-cell gantt-grid-cell-name");
-        nameCell.style.paddingLeft = (6 + task.depth * g.indentSize) + "px";
+        nameCell.style.paddingLeft = (4 + task.depth * g.indentSize) + "px";
 
         if (task.isGroup) {
-            const toggle = el("span", "gantt-toggle", task.isExpanded ? "▾" : "▸");
+            const toggle = el("span", "gantt-toggle", task.isExpanded ? "\u25BE" : "\u25B8");
             toggle.addEventListener("click", (e) => { e.stopPropagation(); cbs.onToggle(task); });
             nameCell.appendChild(toggle);
         } else {

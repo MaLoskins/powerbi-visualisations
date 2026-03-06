@@ -93,8 +93,10 @@ export function renderTree(
         if (py + nodeHeight > maxY) maxY = py + nodeHeight;
     }
 
-    /* Shift so all positions are positive with padding */
-    const pad = 20;
+    /* Shift so all positions are positive with padding.
+       Padding scales with node size so the tree doesn't feel cramped at
+       larger node dimensions or waste space at smaller ones. */
+    const pad = Math.max(12, Math.round(Math.min(nodeWidth, nodeHeight) * 0.15));
     const shiftX = -minX + pad;
     const shiftY = -minY + pad;
 

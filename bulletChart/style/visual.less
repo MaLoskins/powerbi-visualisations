@@ -32,11 +32,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 8px;
+    padding-right: 0.5em;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     text-align: right;
+    max-width: 100%;
 }
 
 /* ── Chart wrapper ── */
@@ -44,6 +45,7 @@
 .bullet-chart-wrapper {
     flex: 1;
     display: flex;
+    justify-content: center;
     overflow: auto;
     min-width: 0;
     .theme-scrollbar(6px);
@@ -96,14 +98,17 @@
 .bullet-value-label {
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
 }
 
 .bullet-target-label {
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
 }
 
 .bullet-cat-label-v {
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
 }

@@ -7,6 +7,9 @@
 
 .variance-container {
     .theme-container-base();
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ── SVG Canvas ── */
@@ -41,6 +44,7 @@
 .variance-axis-label {
     font-family: @font-stack;
     user-select: none;
+    overflow: hidden;
 }
 
 /* ── Data labels ── */
@@ -49,6 +53,8 @@
     font-family: @font-stack;
     user-select: none;
     pointer-events: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Legend ── */
@@ -56,6 +62,8 @@
 .variance-legend-label {
     font-family: @font-stack;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Variance Panel ── */

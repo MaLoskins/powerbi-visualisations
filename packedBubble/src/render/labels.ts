@@ -23,12 +23,46 @@ function labelText(node: BubbleNode, content: LabelContent): string {
     }
 }
 
+/** Shared offscreen canvas for measuring text width. */
+let _measureCtx: CanvasRenderingContext2D | null = null;
+
+function getMeasureCtx(): CanvasRenderingContext2D {
+    if (!_measureCtx) {
+        const canvas = document.createElement("canvas");
+        _measureCtx = canvas.getContext("2d")!;
+    }
+    return _measureCtx;
+}
+
+/** Measure the pixel width of a string at the given font size. */
+function measureTextWidth(text: string, fontSize: number): number {
+    const ctx = getMeasureCtx();
+    ctx.font = `${fontSize}px ${FONT_STACK}`;
+    return ctx.measureText(text).width;
+}
+
+/** Truncate a string with ellipsis to fit within maxWidth pixels.
+ *  Uses binary search for efficiency with canvas measurement. */
+function truncateToFit(text: string, fontSize: number, maxWidth: number): string {
+    if (measureTextWidth(text, fontSize) <= maxWidth) return text;
+    let lo = 0, hi = text.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (measureTextWidth(text.slice(0, mid) + "…", fontSize) <= maxWidth) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return lo > 0 ? text.slice(0, lo) + "…" : "…";
+}
+
 /** Word-wrap a string to fit inside a circle of given radius.
- *  Returns an array of lines. */
+ *  Returns an array of lines. Uses canvas text measurement for accuracy. */
 function wrapText(text: string, radius: number, fontSize: number): string[] {
-    const maxWidth = radius * 1.6;
-    const charWidth = fontSize * 0.55;
-    const maxChars = Math.max(1, Math.floor(maxWidth / charWidth));
+    /* Chord width at vertical offset y from centre = 2 * sqrt(r^2 - y^2).
+     * We use the chord at ~35% from centre as a practical max text width. */
+    const maxWidth = 2 * Math.sqrt(radius * radius - (radius * 0.35) ** 2);
 
     const rawLines = text.split("\n");
     const lines: string[] = [];
@@ -38,7 +72,7 @@ function wrapText(text: string, radius: number, fontSize: number): string[] {
         let current = "";
         for (const word of words) {
             const test = current ? `${current} ${word}` : word;
-            if (test.length > maxChars && current) {
+            if (measureTextWidth(test, fontSize) > maxWidth && current) {
                 lines.push(current);
                 current = word;
             } else {
@@ -48,13 +82,19 @@ function wrapText(text: string, radius: number, fontSize: number): string[] {
         if (current) lines.push(current);
     }
 
-    /* Limit lines to fit vertically */
+    /* Limit lines to fit vertically inside the circle diameter */
     const lineHeight = fontSize * 1.2;
-    const maxLines = Math.max(1, Math.floor((radius * 1.6) / lineHeight));
+    const usableHeight = radius * 2 * 0.8; /* 80% of diameter */
+    const maxLines = Math.max(1, Math.floor(usableHeight / lineHeight));
     if (lines.length > maxLines) {
         const truncated = lines.slice(0, maxLines);
-        truncated[maxLines - 1] = truncated[maxLines - 1].slice(0, -1) + "…";
+        truncated[maxLines - 1] = truncateToFit(truncated[maxLines - 1], fontSize, maxWidth);
         return truncated;
+    }
+
+    /* Truncate any individual line that still exceeds maxWidth */
+    for (let i = 0; i < lines.length; i++) {
+        lines[i] = truncateToFit(lines[i], fontSize, maxWidth);
     }
     return lines;
 }
@@ -96,9 +136,10 @@ export function renderBubbleLabels(
         while (g.firstChild) g.removeChild(g.firstChild);
 
         const raw = labelText(d, cfg.label.labelContent);
+        const maxWidth = 2 * Math.sqrt(d.radius * d.radius - (d.radius * 0.35) ** 2);
         const lines = cfg.label.wrapLabels
             ? wrapText(raw, d.radius, cfg.label.fontSize)
-            : [raw];
+            : [truncateToFit(raw, cfg.label.fontSize, maxWidth)];
 
         const lineHeight = cfg.label.fontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
@@ -168,7 +209,8 @@ export function renderGroupLabels(
         .attr("x", (d) => d.x)
         .attr("y", (d) => {
             const minY = groupMinY.get(d.name);
-            return (minY ?? d.y) - cfg.groupLabel.fontSize - 4;
+            /* Position label above the topmost bubble with a gap proportional to font size */
+            return (minY ?? d.y) - cfg.groupLabel.fontSize * 0.6;
         })
         .attr("text-anchor", "middle")
         .attr("fill", cfg.groupLabel.fontColor)

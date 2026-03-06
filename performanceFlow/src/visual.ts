@@ -38,7 +38,7 @@ import {
     LinkCallbacks,
 } from "./types";
 import {
-    CHART_MARGIN,
+    getResponsiveMargin,
     MIN_CHART_WIDTH,
     MIN_CHART_HEIGHT,
     CSS_PREFIX,
@@ -96,8 +96,9 @@ export class Visual implements IVisual {
     private renderConfig: RenderConfig | null = null;
     private hasRenderedOnce: boolean = false;
 
-    /** Current inner chart height (viewport minus margins). Used for drag clamping. */
+    /** Current inner chart dimensions (viewport minus margins). Used for drag clamping and label truncation. */
     private chartHeight: number = 0;
+    private chartWidth: number = 0;
 
     /* ── Drag RAF debounce ── */
     private dragRafId: number = 0;
@@ -250,14 +251,15 @@ export class Visual implements IVisual {
         if (!this.renderConfig || !this.currentGraph) return;
 
         const cfg = this.renderConfig;
-        const m = CHART_MARGIN;
+        const m = getResponsiveMargin(viewportWidth, viewportHeight);
         const w = viewportWidth - m.left - m.right;
         const h = viewportHeight - m.top - m.bottom;
 
         if (w <= 0 || h <= 0) return;
 
-        /* Store chart height for drag clamping */
+        /* Store chart dimensions for drag clamping and label truncation */
         this.chartHeight = h;
+        this.chartWidth = w;
 
         /* Compute Sankey layout */
         const layoutOpts: SankeyLayoutOptions = {
@@ -405,7 +407,7 @@ export class Visual implements IVisual {
         updateLinkPaths(this.linkGroup, this.renderConfig.link.curvature);
 
         /* Update label positions (no text re-creation) */
-        updateLabelPositions(this.labelGroup, this.currentLayout.nodes, this.renderConfig);
+        updateLabelPositions(this.labelGroup, this.currentLayout.nodes, this.renderConfig, this.chartWidth);
     }
 
     /**

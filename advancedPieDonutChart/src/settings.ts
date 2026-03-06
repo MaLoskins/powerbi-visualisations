@@ -152,13 +152,14 @@ class ChartSettingsCard extends FormattingSettingsCard {
     sortSlices = dropdown("sortSlices", "Sort Slices", SORT_MODES, ["None", "Value ↑", "Value ↓", "Name A→Z", "Name Z→A"], 2);
     showOuterRing = toggle("showOuterRing", "Show Outer Ring", false);
     outerRingThickness = pct("outerRingThickness", "Outer Ring Thickness %", 30);
+    arcStrokeColor = color("arcStrokeColor", "Arc Stroke Color", "#ffffff");
 
     name: string = "chartSettings";
     displayName: string = "Chart Settings";
     slices: FormattingSettingsSlice[] = [
         this.chartType, this.innerRadiusPercent, this.padAngle,
         this.cornerRadius, this.startAngle, this.sortSlices,
-        this.showOuterRing, this.outerRingThickness,
+        this.showOuterRing, this.outerRingThickness, this.arcStrokeColor,
     ];
 }
 
@@ -326,6 +327,7 @@ export function buildRenderConfig(model: VisualFormattingSettingsModel): RenderC
             sortSlices: safeEnum(c.sortSlices.value?.value as string, SORT_MODES, "valueDesc"),
             showOuterRing: c.showOuterRing.value ?? false,
             outerRingThicknessFraction: (c.outerRingThickness.value ?? 30) / 100,
+            arcStrokeColor: c.arcStrokeColor.value?.value || "#ffffff",
         },
         color: {
             colorPalette: safeEnum(col.colorPalette.value?.value as string, COLOR_PALETTES, "default"),

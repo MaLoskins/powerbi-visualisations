@@ -7,7 +7,7 @@
 
 import { Selection } from "d3-selection";
 
-import { RenderConfig, ScatterDataPoint } from "../types";
+import { ChartDimensions, RenderConfig, ScatterDataPoint } from "../types";
 import { LOG_CLAMP_VALUE } from "../constants";
 import { formatNumber } from "../utils/format";
 import { NumericScale } from "./axes";
@@ -24,10 +24,14 @@ export function renderDataLabels(
     cfg: RenderConfig["label"],
     axisCfg: RenderConfig["axis"],
     bubbleRadius: number,
+    dims?: ChartDimensions,
 ): void {
     labelGroup.selectAll("*").remove();
 
     if (!cfg.showDataLabels || points.length === 0) return;
+
+    const minY = cfg.labelFontSize; // leave room for at least one line of text
+    const maxY = dims ? dims.plotHeight : Infinity;
 
     labelGroup
         .selectAll<SVGTextElement, ScatterDataPoint>(".bscatter-data-label")
@@ -35,7 +39,10 @@ export function renderDataLabels(
         .join("text")
         .attr("class", "bscatter-data-label")
         .attr("x", (d) => xScale(clampForScale(d.x, axisCfg.xAxisScale)) ?? 0)
-        .attr("y", (d) => (yScale(clampForScale(d.y, axisCfg.yAxisScale)) ?? 0) - bubbleRadius - 4)
+        .attr("y", (d) => {
+            const raw = (yScale(clampForScale(d.y, axisCfg.yAxisScale)) ?? 0) - bubbleRadius - 4;
+            return Math.max(minY, Math.min(raw, maxY));
+        })
         .attr("text-anchor", "middle")
         .attr("fill", cfg.labelFontColor)
         .attr("font-size", `${cfg.labelFontSize}px`)

@@ -6,7 +6,7 @@
 "use strict";
 
 import { RenderConfig, BarType, WaterfallBar } from "../types";
-import { CSS_PREFIX, FONT_STACK, LEGEND_SWATCH_SIZE, LEGEND_ITEM_GAP } from "../constants";
+import { CSS_PREFIX, FONT_STACK, LEGEND_SWATCH_SIZE, LEGEND_ITEM_GAP, LEGEND_HEIGHT_MAX } from "../constants";
 import { resolveBarColor } from "./chart";
 
 interface LegendEntry {
@@ -36,6 +36,9 @@ export function renderLegend(
     container.style.fontFamily = FONT_STACK;
     container.style.fontSize = cfg.legend.legendFontSize + "px";
     container.style.color = cfg.legend.legendFontColor;
+    container.style.overflow = "hidden";
+    container.style.maxHeight = LEGEND_HEIGHT_MAX + "px";
+    container.style.boxSizing = "border-box";
 
     /* Build legend entries based on which bar types are present */
     const presentTypes = new Set<BarType>(bars.map((b) => b.barType));
@@ -72,6 +75,9 @@ export function renderLegend(
 
         const label = document.createElement("span");
         label.textContent = entry.label;
+        label.style.overflow = "hidden";
+        label.style.textOverflow = "ellipsis";
+        label.style.whiteSpace = "nowrap";
 
         item.appendChild(swatch);
         item.appendChild(label);

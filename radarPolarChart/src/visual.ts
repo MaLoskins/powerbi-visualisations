@@ -247,6 +247,7 @@ export class Visual implements IVisual {
     private hideError(): void {
         this.errorOverlay.style.display = "none";
         this.svg.style.display = "";
+        this.legendContainer.style.display = "";
     }
 
     /* ═══════════════════════════════════════════════

@@ -19,7 +19,7 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 
 import { VisualFormattingSettingsModel, buildRenderConfig } from "./settings";
 import { PieSlice, OuterSlice, RenderConfig, ParseResult, ChartCallbacks, LegendCallbacks } from "./types";
-import { LABEL_PADDING, CHART_PADDING } from "./constants";
+import { CHART_PADDING, dynamicLabelPadding } from "./constants";
 import { resolveColumns } from "./model/columns";
 import { parseSlices } from "./model/parser";
 import { computeGeometry, renderArcs, renderOuterRing, renderBackground, ChartGeometry } from "./render/chart";
@@ -194,7 +194,8 @@ export class Visual implements IVisual {
         const legendW = (cfg.legend.legendPosition === "left" || cfg.legend.legendPosition === "right")
             ? activeLegend.offsetWidth : 0;
 
-        const padding = cfg.label.showLabels && cfg.label.labelPosition !== "inside" ? LABEL_PADDING : CHART_PADDING;
+        const padding = cfg.label.showLabels && cfg.label.labelPosition !== "inside"
+            ? dynamicLabelPadding(viewport.width, viewport.height) : CHART_PADDING;
         const chartW = Math.max(50, viewport.width - legendW - padding * 2);
         const chartH = Math.max(50, viewport.height - legendH - padding * 2);
 
@@ -226,7 +227,7 @@ export class Visual implements IVisual {
         renderBackground(svgSel, svgW, svgH, callbacks.onBackgroundClick);
         renderArcs(svgSel, pr.slices, geom, cfg, callbacks);
         renderOuterRing(svgSel, pr.slices, geom, cfg, callbacks);
-        renderLabels(svgSel, pr.slices, geom, cfg);
+        renderLabels(svgSel, pr.slices, geom, cfg, svgW);
         renderCentreLabel(svgSel, pr.total, this.selectedSlice, cfg, geom);
 
         /* ── Selection styles ── */
@@ -418,7 +419,7 @@ export class Visual implements IVisual {
         const svgW = Number(this.svgEl.getAttribute("width") || 0);
         const svgH = Number(this.svgEl.getAttribute("height") || 0);
         const padding = this.renderConfig.label.showLabels && this.renderConfig.label.labelPosition !== "inside"
-            ? LABEL_PADDING : CHART_PADDING;
+            ? dynamicLabelPadding(svgW, svgH) : CHART_PADDING;
         return computeGeometry(svgW - padding * 2, svgH - padding * 2, this.renderConfig, this.parseResult.hasOuterCategory);
     }
 

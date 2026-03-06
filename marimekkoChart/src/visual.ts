@@ -31,8 +31,9 @@ import {
     LegendPosition,
 } from "./types";
 import {
-    CHART_MARGINS,
+    responsiveMargins,
     LEGEND_AREA_HEIGHT,
+    LEGEND_AREA_MAX_HEIGHT,
     LEGEND_AREA_WIDTH,
     ERROR_CLASS,
     FALLBACK_SEGMENT_COLOR,
@@ -198,6 +199,9 @@ export class Visual implements IVisual {
         const cfg = this.config;
         const data = this.data;
 
+        /* ── Compute responsive margins based on viewport ── */
+        const margins = responsiveMargins(viewport.width, viewport.height);
+
         /* ── Compute available chart area ── */
         const legendPos = cfg.legend.legendPosition;
         const showLegend = cfg.legend.showLegend;
@@ -208,26 +212,27 @@ export class Visual implements IVisual {
             if (legendPos === "top" || legendPos === "bottom") {
                 legendHeight = LEGEND_AREA_HEIGHT;
             } else {
-                legendWidth = LEGEND_AREA_WIDTH;
+                legendWidth = Math.min(LEGEND_AREA_WIDTH, Math.round(viewport.width * 0.25));
             }
         }
 
         const extraBottom = cfg.axis.showXAxis ? extraBottomForRotation(cfg.axis.xLabelRotation) : 0;
-        const yAxisWidth = cfg.axis.showYAxis ? CHART_MARGINS.left : 12;
+        const yAxisWidth = cfg.axis.showYAxis ? margins.left : Math.round(margins.right);
         const widthLabelTop = cfg.axis.showWidthLabels ? 18 : 0;
 
         const svgWidth = viewport.width - legendWidth;
         const svgHeight = viewport.height - legendHeight;
 
-        const chartWidth = Math.max(0, svgWidth - yAxisWidth - CHART_MARGINS.right);
-        const chartHeight = Math.max(0, svgHeight - CHART_MARGINS.top - CHART_MARGINS.bottom - extraBottom - widthLabelTop);
+        const chartWidth = Math.max(0, svgWidth - yAxisWidth - margins.right);
+        const chartHeight = Math.max(0, svgHeight - margins.top - margins.bottom - extraBottom - widthLabelTop);
 
-        /* ── Position SVG ── */
+        /* ── Position SVG and apply clip to prevent label overflow ── */
         this.svgRoot.setAttribute("width", String(svgWidth));
         this.svgRoot.setAttribute("height", String(svgHeight));
+        this.svgRoot.style.overflow = "hidden";
 
         const translateX = yAxisWidth;
-        const translateY = CHART_MARGINS.top + widthLabelTop;
+        const translateY = margins.top + widthLabelTop;
         this.chartG.setAttribute("transform", `translate(${translateX}, ${translateY})`);
 
         /* ── Layout columns ── */
@@ -302,27 +307,38 @@ export class Visual implements IVisual {
         }
 
         lc.style.position = "absolute";
-        lc.style.overflow = "hidden";
+        lc.style.overflow = "auto";
+
+        /* Cap the right-side legend width to 25% of viewport */
+        const effectiveLegendWidth = Math.min(LEGEND_AREA_WIDTH, Math.round(viewport.width * 0.25));
 
         if (position === "top") {
             lc.style.top = "0";
             lc.style.left = "0";
+            lc.style.right = "auto";
             lc.style.width = viewport.width + "px";
-            lc.style.height = LEGEND_AREA_HEIGHT + "px";
+            lc.style.maxHeight = LEGEND_AREA_MAX_HEIGHT + "px";
+            lc.style.height = "auto";
+            lc.style.minHeight = LEGEND_AREA_HEIGHT + "px";
             this.svgRoot.style.marginTop = LEGEND_AREA_HEIGHT + "px";
         } else if (position === "bottom") {
             lc.style.top = svgHeight + "px";
             lc.style.left = "0";
+            lc.style.right = "auto";
             lc.style.width = viewport.width + "px";
-            lc.style.height = LEGEND_AREA_HEIGHT + "px";
+            lc.style.maxHeight = LEGEND_AREA_MAX_HEIGHT + "px";
+            lc.style.height = "auto";
+            lc.style.minHeight = LEGEND_AREA_HEIGHT + "px";
             this.svgRoot.style.marginTop = "0";
         } else {
             /* right */
             lc.style.top = "0";
             lc.style.right = "0";
             lc.style.left = "auto";
-            lc.style.width = LEGEND_AREA_WIDTH + "px";
+            lc.style.width = effectiveLegendWidth + "px";
             lc.style.height = viewport.height + "px";
+            lc.style.maxHeight = "";
+            lc.style.minHeight = "";
             this.svgRoot.style.marginTop = "0";
         }
     }
@@ -356,7 +372,7 @@ export class Visual implements IVisual {
                 ];
 
                 if (seg.isNegative) {
-                    items.push({ displayName: "⚠ Warning", value: "Original value is negative" });
+                    items.push({ displayName: "Warning", value: "Original value is negative" });
                 }
 
                 for (const extra of seg.tooltipExtras) {

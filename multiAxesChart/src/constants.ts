@@ -105,19 +105,32 @@ export const FONT_STACK = '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", H
 
 /* ── Layout Constants ── */
 
+/** Base layout values — used as reference for a ~500px viewport.
+ *  computeLayout() scales these proportionally for the actual viewport. */
 export const MARGIN_TOP = 8;
 export const MARGIN_BOTTOM = 8;
 export const MARGIN_LEFT = 8;
 export const MARGIN_RIGHT = 8;
-export const Y_AXIS_WIDTH = 50;
+export const Y_AXIS_WIDTH_BASE = 50;
 export const X_AXIS_BASE_HEIGHT = 28;
-export const LEGEND_HEIGHT = 28;
-export const AXIS_LABEL_PAD = 16;
+export const LEGEND_HEIGHT_BASE = 28;
+export const AXIS_LABEL_PAD_BASE = 16;
 export const TICK_COUNT = 5;
 export const BAR_PADDING_INNER = 0.2;
 export const BAR_PADDING_OUTER = 0.1;
 export const BAR_GROUP_PADDING = 0.1;
 export const MIN_CHART_SIZE = 40;
+
+/** Reference viewport dimension used to normalise proportional values. */
+export const REF_VIEWPORT = 500;
+
+/** Scale a base pixel value proportionally to the viewport, clamped to [min, max]. */
+export function proportional(basePx: number, viewportPx: number, min?: number, max?: number): number {
+    const scaled = basePx * Math.max(0.6, Math.min(1.4, viewportPx / REF_VIEWPORT));
+    const lo = min ?? basePx * 0.5;
+    const hi = max ?? basePx * 2;
+    return Math.round(Math.max(lo, Math.min(hi, scaled)));
+}
 
 /* ── Dash Patterns ── */
 

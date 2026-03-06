@@ -84,9 +84,15 @@ export function renderXAxis(
     const g = svg.append("g").attr("class", "marimekko-x-axis");
     const rotation = Number(cfg.xLabelRotation) || 0;
 
+    /* For rotated labels, allow more text but cap at a reasonable max */
+    const maxLabelWidth = rotation > 0
+        ? Math.min(chartHeight * 0.5, 120)
+        : undefined; /* undefined = use column width */
+
     for (const col of columns) {
         const cx = col.x + col.width / 2;
-        const label = truncateText(col.xCategory, col.width - 4, cfg.xAxisFontSize, FONT_FAMILY);
+        const truncWidth = maxLabelWidth ?? Math.max(0, col.width - 4);
+        const label = truncateText(col.xCategory, truncWidth, cfg.xAxisFontSize, FONT_FAMILY);
 
         const text = g.append("text")
             .attr("class", "marimekko-x-label")
@@ -121,10 +127,14 @@ export function renderWidthLabels(
     if (!cfg.showWidthLabels) return;
 
     const g = svg.append("g").attr("class", "marimekko-width-labels");
+    const fontSize = cfg.xAxisFontSize - 1;
 
     for (const col of columns) {
         const cx = col.x + col.width / 2;
-        const labelText = formatCompact(col.columnTotal);
+        const rawText = formatCompact(col.columnTotal);
+        /* Truncate width labels that exceed column width */
+        const labelText = truncateText(rawText, Math.max(0, col.width - 4), fontSize, FONT_FAMILY);
+        if (!labelText) continue;
 
         g.append("text")
             .attr("class", "marimekko-width-label")
@@ -132,7 +142,7 @@ export function renderWidthLabels(
             .attr("y", -WIDTH_LABEL_OFFSET_Y)
             .attr("text-anchor", "middle")
             .attr("fill", cfg.xAxisFontColor)
-            .attr("font-size", (cfg.xAxisFontSize - 1) + "px")
+            .attr("font-size", fontSize + "px")
             .attr("font-family", FONT_FAMILY)
             .text(labelText);
     }

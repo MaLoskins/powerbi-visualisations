@@ -11,6 +11,11 @@ import { ChartDimensions, RenderConfig } from "../types";
 import { DASH_ARRAYS, QUADRANT_LABEL_PAD, QUADRANT_LABEL_FONT_SIZE } from "../constants";
 import { NumericScale } from "./axes";
 
+/** Clamp a value to [min, max]. */
+function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(value, max));
+}
+
 /**
  * Render quadrant dividing lines and optional labels.
  */
@@ -69,55 +74,33 @@ export function renderQuadrants(
     const pad = QUADRANT_LABEL_PAD;
     const fs = QUADRANT_LABEL_FONT_SIZE;
 
-    // Q1: top-right (high x, high y)
-    quadrantGroup
-        .append("text")
-        .attr("class", "bscatter-quadrant-label")
-        .attr("x", Math.min(dims.plotWidth - pad, Math.max(cx + pad, pad)))
-        .attr("y", Math.max(pad + fs, Math.min(cy - pad, dims.plotHeight - pad)))
-        .attr("text-anchor", cx + pad < dims.plotWidth / 2 ? "start" : "end")
-        .attr("fill", labelColor)
-        .attr("font-size", `${fs}px`)
-        .attr("opacity", 0.6)
-        .style("pointer-events", "none")
-        .text(cfg.q1Label);
+    // Clamped positions for label x/y in each half
+    const xRight = clamp(cx + pad, pad, dims.plotWidth - pad);
+    const xLeft  = clamp(cx - pad, pad, dims.plotWidth - pad);
+    const yTop   = clamp(cy - pad, pad + fs, dims.plotHeight - pad);
+    const yBot   = clamp(cy + pad + fs, pad + fs, dims.plotHeight - pad);
 
-    // Q2: top-left (low x, high y)
-    quadrantGroup
-        .append("text")
-        .attr("class", "bscatter-quadrant-label")
-        .attr("x", Math.max(pad, Math.min(cx - pad, dims.plotWidth - pad)))
-        .attr("y", Math.max(pad + fs, Math.min(cy - pad, dims.plotHeight - pad)))
-        .attr("text-anchor", cx - pad > dims.plotWidth / 2 ? "end" : "start")
-        .attr("fill", labelColor)
-        .attr("font-size", `${fs}px`)
-        .attr("opacity", 0.6)
-        .style("pointer-events", "none")
-        .text(cfg.q2Label);
+    const anchorRight = cx + pad < dims.plotWidth / 2 ? "start" : "end";
+    const anchorLeft  = cx - pad > dims.plotWidth / 2 ? "end" : "start";
 
-    // Q3: bottom-left (low x, low y)
-    quadrantGroup
-        .append("text")
-        .attr("class", "bscatter-quadrant-label")
-        .attr("x", Math.max(pad, Math.min(cx - pad, dims.plotWidth - pad)))
-        .attr("y", Math.min(dims.plotHeight - pad, Math.max(cy + pad + fs, pad + fs)))
-        .attr("text-anchor", cx - pad > dims.plotWidth / 2 ? "end" : "start")
-        .attr("fill", labelColor)
-        .attr("font-size", `${fs}px`)
-        .attr("opacity", 0.6)
-        .style("pointer-events", "none")
-        .text(cfg.q3Label);
+    const labels: Array<{ x: number; y: number; anchor: string; text: string }> = [
+        { x: xRight, y: yTop, anchor: anchorRight, text: cfg.q1Label }, // Q1: top-right
+        { x: xLeft,  y: yTop, anchor: anchorLeft,  text: cfg.q2Label }, // Q2: top-left
+        { x: xLeft,  y: yBot, anchor: anchorLeft,  text: cfg.q3Label }, // Q3: bottom-left
+        { x: xRight, y: yBot, anchor: anchorRight, text: cfg.q4Label }, // Q4: bottom-right
+    ];
 
-    // Q4: bottom-right (high x, low y)
-    quadrantGroup
-        .append("text")
-        .attr("class", "bscatter-quadrant-label")
-        .attr("x", Math.min(dims.plotWidth - pad, Math.max(cx + pad, pad)))
-        .attr("y", Math.min(dims.plotHeight - pad, Math.max(cy + pad + fs, pad + fs)))
-        .attr("text-anchor", cx + pad < dims.plotWidth / 2 ? "start" : "end")
-        .attr("fill", labelColor)
-        .attr("font-size", `${fs}px`)
-        .attr("opacity", 0.6)
-        .style("pointer-events", "none")
-        .text(cfg.q4Label);
+    for (const lbl of labels) {
+        quadrantGroup
+            .append("text")
+            .attr("class", "bscatter-quadrant-label")
+            .attr("x", lbl.x)
+            .attr("y", lbl.y)
+            .attr("text-anchor", lbl.anchor)
+            .attr("fill", labelColor)
+            .attr("font-size", `${fs}px`)
+            .attr("opacity", 0.6)
+            .style("pointer-events", "none")
+            .text(lbl.text);
+    }
 }

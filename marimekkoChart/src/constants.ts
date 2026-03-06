@@ -114,13 +114,31 @@ export const FONT_FAMILY = FONT_STACK;
 
 /* ── Layout Constants ── */
 
-/** Margin around the chart area (px) */
+/** Default margin around the chart area (px) — used as base for responsive scaling */
 export const CHART_MARGINS = {
     top: 24,
     right: 12,
     bottom: 40,
     left: 48,
 } as const;
+
+/**
+ * Compute responsive margins that scale down for small viewports.
+ * Below 300px width or 200px height the margins shrink proportionally
+ * so the chart area is never squeezed out by fixed chrome.
+ */
+export function responsiveMargins(viewportWidth: number, viewportHeight: number): {
+    top: number; right: number; bottom: number; left: number;
+} {
+    const wScale = Math.min(1, viewportWidth / 300);
+    const hScale = Math.min(1, viewportHeight / 200);
+    return {
+        top: Math.round(CHART_MARGINS.top * hScale),
+        right: Math.round(CHART_MARGINS.right * wScale),
+        bottom: Math.round(CHART_MARGINS.bottom * hScale),
+        left: Math.round(CHART_MARGINS.left * wScale),
+    };
+}
 
 /** Extra bottom margin when x-axis labels are rotated */
 export const ROTATED_LABEL_EXTRA_BOTTOM = {
@@ -141,10 +159,13 @@ export const LEGEND_SWATCH_SIZE = 12;
 /** Legend item gap (px) */
 export const LEGEND_ITEM_GAP = 16;
 
-/** Legend area height when positioned top/bottom (px) */
+/** Base legend area height when positioned top/bottom (px) */
 export const LEGEND_AREA_HEIGHT = 28;
 
-/** Legend area width when positioned right (px) */
+/** Maximum legend area height — allows wrapping for many categories */
+export const LEGEND_AREA_MAX_HEIGHT = 64;
+
+/** Base legend area width when positioned right (px) */
 export const LEGEND_AREA_WIDTH = 140;
 
 /** Hatched pattern ID for negative values */

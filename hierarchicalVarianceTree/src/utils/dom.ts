@@ -20,9 +20,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 
 /** Remove all children from a DOM element. */
 export function clearChildren(element: HTMLElement | SVGElement): void {
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
-    }
+    element.replaceChildren();
 }
 
 /** Clamp a number between min and max. */

@@ -22,6 +22,8 @@ export function renderYAxis(
     if (isCategoryAxis) {
         const band = scale as ScaleBand<string>;
         const ticks = band.domain();
+        /* Allow roughly 8 characters proportional to font size for Y category labels */
+        const maxYLabelWidth = cfg.axisFontSize * 8 * 0.6;
         for (const t of ticks) {
             const y = (band(t) ?? 0) + band.bandwidth() / 2;
             g.append("text")
@@ -32,7 +34,7 @@ export function renderYAxis(
                 .attr("text-anchor", "end")
                 .attr("font-size", cfg.axisFontSize + "px")
                 .attr("fill", cfg.axisFontColor)
-                .text(t);
+                .text(truncateLabel(t, maxYLabelWidth, cfg.axisFontSize));
         }
     } else {
         const linear = scale as ScaleLinear<number, number>;
@@ -81,7 +83,7 @@ export function renderXAxis(
                 .attr("y", 12)
                 .attr("font-size", cfg.axisFontSize + "px")
                 .attr("fill", cfg.axisFontColor)
-                .text(truncateLabel(t, band.bandwidth()));
+                .text(truncateLabel(t, band.bandwidth(), cfg.axisFontSize));
 
             if (rotation === 0) {
                 label.attr("text-anchor", "middle");
@@ -158,8 +160,8 @@ function formatAxisTick(value: number): string {
     return value.toString();
 }
 
-function truncateLabel(text: string, maxWidth: number): string {
-    const approxChars = Math.floor(maxWidth / 7);
+function truncateLabel(text: string, maxWidth: number, fontSize: number = 10): string {
+    const approxChars = Math.floor(maxWidth / (fontSize * 0.6));
     if (text.length <= approxChars) return text;
-    return text.slice(0, Math.max(2, approxChars - 1)) + "…";
+    return text.slice(0, Math.max(2, approxChars - 1)) + "...";
 }

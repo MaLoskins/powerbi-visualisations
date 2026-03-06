@@ -1,11 +1,10 @@
-import powerbi from "powerbi-visuals-api";
 import { select } from "d3-selection";
 import type { Selection } from "d3-selection";
 import { timeMonth, timeYear, timeWeek, timeDay } from "d3-time";
 import type { TimeInterval } from "d3-time";
 import { timeFormat } from "d3-time-format";
 import type { ScaleTime } from "d3-scale";
-import type { GanttTask, RenderConfig, TaskPosition, DateFormat } from "../types";
+import type { GanttTask, RenderConfig, TaskPosition } from "../types";
 import { MIN_BAR_WIDTH, MILESTONE_STYLES, STATUS_COLORS } from "../constants";
 import { formatDateCustom, isWeekend } from "../utils/date";
 
@@ -309,7 +308,7 @@ function renderTaskBar(
             .text(Math.round(task.progress * 100) + "%");
     }
 
-    attachBarInteraction(barG, task, cfg.grid.dateFormat, cbs);
+    attachBarInteraction(barG, task, cbs);
 }
 
 function renderGroupBar(
@@ -350,7 +349,7 @@ function renderGroupBar(
             .style("fill", gc);
     }
 
-    attachBarInteraction(barG, task, cfg.grid.dateFormat, cbs);
+    attachBarInteraction(barG, task, cbs);
 }
 
 function renderMilestone(
@@ -369,7 +368,7 @@ function renderMilestone(
         .attr("points", `${cx},${cy - s} ${cx + s},${cy} ${cx},${cy + s} ${cx - s},${cy}`)
         .style("fill", fill);
 
-    attachBarInteraction(barG, task, cfg.grid.dateFormat, cbs);
+    attachBarInteraction(barG, task, cbs);
 }
 
 function renderMilestoneMarker(
@@ -497,7 +496,6 @@ function renderDependencies(
 function attachBarInteraction(
     barG: Selection<SVGGElement, unknown, null, undefined>,
     task: GanttTask,
-    dateFmt: DateFormat,
     cbs: TimelineBodyCallbacks,
 ): void {
     const node = barG.node() as SVGGElement;

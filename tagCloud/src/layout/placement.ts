@@ -202,6 +202,10 @@ export function computePlacement(
     const result: PlacedWord[] = [];
     const padding = cfg.word.padding;
 
+    /* Use responsive margins based on viewport size instead of fixed pixels */
+    const marginX = width * 0.02;
+    const marginY = height * 0.02;
+
     for (const word of limited) {
         const fontSize = fontScale(word.value);
         const rotation = getRotation(cfg.rotation);
@@ -226,10 +230,10 @@ export function computePlacement(
             const candidateX = cx + dx * biasScale - paddedW / 2;
             const candidateY = cy + dy * biasScale - paddedH / 2;
 
-            /* Bounds check */
-            if (candidateX < 0 || candidateY < 0 ||
-                candidateX + paddedW > width ||
-                candidateY + paddedH > height) {
+            /* Bounds check with responsive margins */
+            if (candidateX < marginX || candidateY < marginY ||
+                candidateX + paddedW > width - marginX ||
+                candidateY + paddedH > height - marginY) {
                 continue;
             }
 

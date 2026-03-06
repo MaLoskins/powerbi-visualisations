@@ -156,7 +156,8 @@ export class Visual implements IVisual {
 
         const onMouseMove = (ev: MouseEvent): void => {
             if (!this.isResizingGrid) return;
-            this.gridPane.style.width = clamp(startWidth + ev.clientX - startX, 100, 800) + "px";
+            const maxW = Math.max(200, this.viewportWidth * 0.7);
+            this.gridPane.style.width = clamp(startWidth + ev.clientX - startX, 100, maxW) + "px";
         };
         const onMouseUp = (): void => {
             this.isResizingGrid = false;
@@ -317,8 +318,10 @@ export class Visual implements IVisual {
 
         /* Grid pane visibility */
         this.gridPane.style.display = cfg.grid.showGrid ? "" : "none";
-        /* Preserve user-dragged width; fall back to config default */
-        const gridW = this.userGridWidth ?? cfg.grid.gridWidth;
+        /* Preserve user-dragged width; fall back to config default.
+           Clamp so the grid never exceeds 70% of viewport. */
+        const maxGridW = Math.max(200, this.viewportWidth * 0.7);
+        const gridW = Math.min(this.userGridWidth ?? cfg.grid.gridWidth, maxGridW);
         this.gridPane.style.width = gridW + "px";
         this.gridPane.style.borderRightColor = cfg.grid.gridBorderColor;
         this.resizeHandle.style.display = cfg.grid.showGrid ? "" : "none";

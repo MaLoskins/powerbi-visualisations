@@ -184,13 +184,16 @@ export class Visual implements IVisual {
         const { bulletHeight, bulletSpacing, categoryWidth, showCategoryLabels } = cfg.layout;
         const axisH = cfg.axis.showAxis ? AXIS_AREA_SIZE : 0;
         const labelW = showCategoryLabels ? categoryWidth : 0;
+        const pad = Math.max(4, Math.round(viewport.width * 0.01));
 
         const totalBulletH = items.length * bulletHeight + (items.length - 1) * bulletSpacing;
         const totalH = totalBulletH + axisH;
-        const chartW = Math.max(0, viewport.width - labelW - 8);
+        const chartW = Math.max(0, viewport.width - labelW - pad * 2);
 
         /* Container layout */
         this.container.style.flexDirection = "row";
+        this.container.style.justifyContent = "center";
+        this.container.style.alignItems = "flex-start";
         this.labelColumn.style.display = showCategoryLabels ? "flex" : "none";
         this.labelColumn.style.width = labelW + "px";
         this.labelColumn.style.flexDirection = "column";
@@ -233,15 +236,19 @@ export class Visual implements IVisual {
         cfg: RenderConfig,
     ): void {
         const { bulletHeight: bulletWidth, bulletSpacing, showCategoryLabels, categoryFontSize } = cfg.layout;
-        const axisW = cfg.axis.showAxis ? 40 : 0;
-        const catLabelH = showCategoryLabels ? categoryFontSize + 20 : 0;
+        const axisPad = Math.max(4, Math.round(cfg.axis.axisFontSize * 0.4));
+        const axisW = cfg.axis.showAxis ? AXIS_AREA_SIZE + axisPad : 0;
+        const pad = Math.max(4, Math.round(viewport.height * 0.01));
+        const catLabelH = showCategoryLabels ? categoryFontSize + pad * 2 : 0;
 
         const totalBulletW = items.length * bulletWidth + (items.length - 1) * bulletSpacing;
-        const chartH = Math.max(0, viewport.height - catLabelH - 8);
+        const chartH = Math.max(0, viewport.height - catLabelH - pad);
         const totalW = totalBulletW + axisW;
 
         /* Container layout */
         this.container.style.flexDirection = "column";
+        this.container.style.justifyContent = "flex-start";
+        this.container.style.alignItems = "center";
         this.labelColumn.style.display = "none";
         this.chartWrapper.style.overflow = totalW > viewport.width ? "auto" : "hidden";
 
@@ -252,27 +259,25 @@ export class Visual implements IVisual {
         /* ── Axis ── */
         renderVerticalAxis(this.svg, globalMax, chartH, totalBulletW, axisW, cfg);
 
-        /* ── Create offset group for bullet content area ── */
-        const contentGroup = document.createElementNS(SVG_NS, "g");
-        contentGroup.setAttribute("transform", `translate(${axisW}, 0)`);
-        this.svg.appendChild(contentGroup);
+        /* ── Bullets (rendered directly into a translated group) ── */
+        const bulletGroup = document.createElementNS(SVG_NS, "g") as SVGGElement;
+        bulletGroup.setAttribute("transform", `translate(${axisW}, 0)`);
+        this.svg.appendChild(bulletGroup);
 
-        /* We need a nested SVG for the bullets to stay inside the group */
-        const innerSvg = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
-        innerSvg.setAttribute("x", String(axisW));
-        innerSvg.setAttribute("y", "0");
-        innerSvg.setAttribute("width", String(totalBulletW));
-        innerSvg.setAttribute("height", String(chartH));
-        this.svg.appendChild(innerSvg);
+        const bulletSvg = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
+        bulletSvg.setAttribute("x", "0");
+        bulletSvg.setAttribute("y", "0");
+        bulletSvg.setAttribute("width", String(totalBulletW));
+        bulletSvg.setAttribute("height", String(chartH));
+        bulletGroup.appendChild(bulletSvg);
 
-        /* ── Bullets ── */
-        renderBulletsVertical(innerSvg, items, globalMax, chartH, cfg, this.buildCallbacks());
+        renderBulletsVertical(bulletSvg, items, globalMax, chartH, cfg, this.buildCallbacks());
 
         /* ── Value labels ── */
         const labelSvg = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
         labelSvg.setAttribute("x", String(axisW));
         labelSvg.setAttribute("y", "0");
-        labelSvg.setAttribute("width", String(totalBulletW + 60));
+        labelSvg.setAttribute("width", String(totalBulletW + pad * 4));
         labelSvg.setAttribute("height", String(viewport.height));
         labelSvg.setAttribute("overflow", "visible");
         this.svg.appendChild(labelSvg);
@@ -283,7 +288,7 @@ export class Visual implements IVisual {
         const catSvg = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
         catSvg.setAttribute("x", String(axisW));
         catSvg.setAttribute("y", "0");
-        catSvg.setAttribute("width", String(totalBulletW + 20));
+        catSvg.setAttribute("width", String(totalBulletW + pad));
         catSvg.setAttribute("height", String(viewport.height));
         catSvg.setAttribute("overflow", "visible");
         this.svg.appendChild(catSvg);

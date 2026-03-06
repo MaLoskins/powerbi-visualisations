@@ -13,6 +13,23 @@ import { DEG_TO_RAD, GAUGE_MARGIN, CSS_PREFIX } from "../constants";
 import { hexToRgba } from "../utils/color";
 import { clamp } from "../utils/dom";
 
+/**
+ * Constrain an SVG text element to a maximum pixel width.
+ * Compresses glyphs via SVG textLength; leaves the element untouched if already narrow enough.
+ */
+function truncateText(node: SVGTextElement, maxWidth: number): void {
+    if (maxWidth <= 0) return;
+    try {
+        const len = node.getComputedTextLength();
+        if (len > maxWidth) {
+            node.setAttribute("textLength", String(maxWidth));
+            node.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        }
+    } catch {
+        /* getComputedTextLength may throw if the element is not yet in the DOM */
+    }
+}
+
 /** Shorthand for a d3 selection rooted on an SVG group */
 type GSelection = Selection<SVGGElement, unknown, null, undefined>;
 
@@ -261,6 +278,11 @@ function renderTicks(
     const { outerRadius } = layout;
     const count = cfg.ticks.tickCount;
 
+    /* Scale tick length proportionally to gauge radius (cfg value treated as reference at r=100) */
+    const scaledTickLength = Math.max(3, cfg.ticks.tickLength * (outerRadius / 100));
+    /* Max width for tick labels: space between adjacent ticks, approximated */
+    const maxTickLabelWidth = outerRadius * 0.5;
+
     for (let i = 0; i <= count; i++) {
         const v = data.minValue + (data.maxValue - data.minValue) * (i / count);
         const angle = valueToAngle(v);
@@ -270,8 +292,8 @@ function renderTicks(
         // SVG convention: angle from top, clockwise
         const x1 = sinA * outerRadius;
         const y1 = -cosA * outerRadius;
-        const x2 = sinA * (outerRadius + cfg.ticks.tickLength);
-        const y2 = -cosA * (outerRadius + cfg.ticks.tickLength);
+        const x2 = sinA * (outerRadius + scaledTickLength);
+        const y2 = -cosA * (outerRadius + scaledTickLength);
 
         g.append("line")
             .attr("class", CSS_PREFIX + "tick")
@@ -281,7 +303,7 @@ function renderTicks(
             .attr("stroke-width", cfg.ticks.tickWidth);
 
         if (cfg.ticks.showTickLabels) {
-            const labelR = outerRadius + cfg.ticks.tickLength + cfg.ticks.tickLabelFontSize * 0.6;
+            const labelR = outerRadius + scaledTickLength + cfg.ticks.tickLabelFontSize * 0.6;
             const lx = sinA * labelR;
             const ly = -cosA * labelR;
 
@@ -292,7 +314,8 @@ function renderTicks(
                 .attr("dominant-baseline", "central")
                 .attr("fill", cfg.ticks.tickLabelFontColor)
                 .attr("font-size", cfg.ticks.tickLabelFontSize + "px")
-                .text(formatTickValue(v));
+                .text(formatTickValue(v))
+                .each(function () { truncateText(this as SVGTextElement, maxTickLabelWidth); });
         }
     }
 }
@@ -342,6 +365,7 @@ function renderTargetMarker(
         const labelR = outerRadius + cfg.target.targetLabelFontSize * 0.8 + 2;
         const lx = sinA * labelR;
         const ly = -cosA * labelR;
+        const maxTargetLabelWidth = outerRadius * 0.5;
 
         g.append("text")
             .attr("class", CSS_PREFIX + "target-label")
@@ -350,7 +374,8 @@ function renderTargetMarker(
             .attr("dominant-baseline", "central")
             .attr("fill", cfg.target.targetLabelFontColor)
             .attr("font-size", cfg.target.targetLabelFontSize + "px")
-            .text(formatTickValue(data.target));
+            .text(formatTickValue(data.target))
+            .each(function () { truncateText(this as SVGTextElement, maxTargetLabelWidth); });
     }
 }
 

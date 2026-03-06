@@ -6,7 +6,7 @@
 import { select, Selection } from "d3-selection";
 import { scaleBand, scaleLinear, ScaleBand, ScaleLinear } from "d3-scale";
 import { VarianceItem, RenderConfig, ChartCallbacks } from "../types";
-import { MARGIN, LEGEND_HEIGHT } from "../constants";
+import { LEGEND_HEIGHT, MARGIN } from "../constants";
 import { renderXAxis, renderYAxis, renderGridlines } from "./axes";
 import { renderVarianceIndicators } from "./varianceIndicator";
 import { renderVariancePanel } from "./variancePanel";
@@ -29,17 +29,22 @@ export function renderChart(
 
     const isVertical = cfg.chart.orientation === "vertical";
 
-    /* ── Compute margins ── */
-    const legendH = cfg.legend.showLegend ? LEGEND_HEIGHT : 0;
+    /* ── Compute margins (proportional to viewport) ── */
+    const fontSize = cfg.axis.axisFontSize;
+    const legendH = cfg.legend.showLegend
+        ? Math.max(LEGEND_HEIGHT, cfg.legend.legendFontSize * 2.5)
+        : 0;
     const legendAtTop = cfg.legend.legendPosition === "top";
     const xRotation = parseInt(cfg.axis.xLabelRotation, 10);
-    const xAxisExtra = cfg.axis.showXAxis ? (xRotation > 0 ? 40 : 24) : 0;
-    const yAxisExtra = cfg.axis.showYAxis ? 50 : 10;
+    const xAxisExtra = cfg.axis.showXAxis
+        ? (xRotation > 0 ? Math.max(40, fontSize * 4) : Math.max(24, fontSize * 2.4))
+        : 0;
+    const yAxisExtra = cfg.axis.showYAxis ? Math.max(40, fontSize * 5) : Math.max(8, height * 0.02);
 
-    const marginTop = MARGIN.top + (legendAtTop ? legendH : 0);
-    const marginBottom = MARGIN.bottom + (!legendAtTop ? legendH : 0) + (isVertical ? xAxisExtra : 0);
-    const marginLeft = MARGIN.left + (isVertical ? 0 : yAxisExtra);
-    const marginRight = MARGIN.right;
+    const marginTop = Math.max(MARGIN.top, height * 0.02) + (legendAtTop ? legendH : 0);
+    const marginBottom = Math.max(MARGIN.bottom, height * 0.04) + (!legendAtTop ? legendH : 0) + (isVertical ? xAxisExtra : 0);
+    const marginLeft = Math.max(MARGIN.left, width * 0.04) + (isVertical ? 0 : yAxisExtra);
+    const marginRight = Math.max(MARGIN.right, width * 0.02);
 
     /* Panel allocation */
     const panelAlloc = cfg.variancePanel.showVariancePanel && isVertical
@@ -52,10 +57,22 @@ export function renderChart(
     /* ── Set SVG dimensions ── */
     d3svg.attr("width", width).attr("height", height);
 
+    /* ── Clip path for chart area (prevents axis label overflow) ── */
+    const clipId = "variance-clip-" + Math.random().toString(36).slice(2, 9);
+    const defs = d3svg.append("defs");
+    defs.append("clipPath")
+        .attr("id", clipId)
+        .append("rect")
+        .attr("x", -marginLeft)
+        .attr("y", -marginTop)
+        .attr("width", width)
+        .attr("height", height);
+
     /* ── Root group ── */
     const root = d3svg.append("g")
         .attr("class", "variance-root")
-        .attr("transform", `translate(${marginLeft},${marginTop})`);
+        .attr("transform", `translate(${marginLeft},${marginTop})`)
+        .attr("clip-path", `url(#${clipId})`);
 
     /* ── Scales ── */
     const categories = items.map((d) => d.category);
@@ -120,17 +137,19 @@ export function renderChart(
 
     /* ── Variance panel ── */
     if (panelAlloc > 0) {
+        const panelGap = Math.max(4, width * 0.01);
         const panelG = root.append("g")
             .attr("class", "variance-panel")
-            .attr("transform", `translate(${innerWidth + 8},0)`);
+            .attr("transform", `translate(${innerWidth + panelGap},0)`);
         renderVariancePanel(
             panelG, items, bandScale,
-            cfg, panelAlloc - 8, innerHeight, isVertical,
+            cfg, panelAlloc - panelGap, innerHeight, isVertical,
         );
     }
 
     /* ── Legend ── */
-    const legendY = legendAtTop ? -legendH + 8 : innerHeight + xAxisExtra + 16;
+    const legendPad = Math.max(4, legendH * 0.2);
+    const legendY = legendAtTop ? -legendH + legendPad : innerHeight + xAxisExtra + legendPad;
     const legendG = root.append("g")
         .attr("class", "variance-legend")
         .attr("transform", `translate(0,${legendY})`);

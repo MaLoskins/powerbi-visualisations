@@ -99,8 +99,6 @@ export class Visual implements IVisual {
         try {
             const updateType = options.type ?? 0;
             const hasData = (updateType & 2) !== 0;
-            const isResizeOnly = !hasData && (updateType & (4 | 16)) !== 0;
-
             /* Always rebuild config */
             const dv = options.dataViews?.[0];
             if (dv) {
@@ -132,7 +130,7 @@ export class Visual implements IVisual {
             if (this.parseResult) {
                 this.layoutAndRender(options.viewport);
             }
-        } catch (err) {
+        } catch (_err) {
             this.showError("An unexpected error occurred.");
         }
     }
@@ -201,7 +199,7 @@ export class Visual implements IVisual {
        Tooltips
        ═══════════════════════════════════════════════ */
 
-    private showTooltip(item: WordItem, x: number, y: number, e: MouseEvent): void {
+    private showTooltip(item: WordItem, x: number, y: number, _e: MouseEvent): void {
         const tooltipItems: VisualTooltipDataItem[] = [
             { displayName: "Word", value: item.text },
             { displayName: "Size", value: formatNumber(item.value) },

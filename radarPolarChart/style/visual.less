@@ -67,30 +67,38 @@
 .radar-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 6px 10px;
     position: absolute;
     pointer-events: none;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 2px 4px;
 }
 
 .radar-legend.radar-legend-top {
-    top: 4px;
+    top: 2px;
     left: 50%;
     transform: translateX(-50%);
     justify-content: center;
+    max-width: 90%;
 }
 
 .radar-legend.radar-legend-bottom {
-    bottom: 4px;
+    bottom: 2px;
     left: 50%;
     transform: translateX(-50%);
     justify-content: center;
+    max-width: 90%;
 }
 
 .radar-legend.radar-legend-right {
     top: 50%;
-    right: 8px;
+    right: 4px;
     transform: translateY(-50%);
     flex-direction: column;
+    max-width: 20%;
 }
 
 .radar-legend-item {
@@ -99,6 +107,8 @@
     gap: 4px;
     pointer-events: auto;
     cursor: default;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .radar-legend-swatch {
@@ -110,6 +120,9 @@
 
 .radar-legend-label {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
 }
 
 /* ── Error Overlay ── */

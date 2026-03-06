@@ -128,8 +128,21 @@ export const BLUE_700 = ACCENT[700];
    Module-specific constants
    ═══════════════════════════════════════════════ */
 
-/** Minimum chart margin (px) */
+/** Minimum chart margin (px) — static fallback */
 export const CHART_MARGIN = { top: 12, right: 16, bottom: 12, left: 16 };
+
+/**
+ * Compute responsive chart margins proportional to viewport size.
+ * Uses ~2% of each dimension, clamped to sensible min/max bounds.
+ */
+export function getResponsiveMargin(
+    viewportWidth: number,
+    viewportHeight: number,
+): { top: number; right: number; bottom: number; left: number } {
+    const hMargin = Math.max(8, Math.min(40, Math.round(viewportWidth * 0.02)));
+    const vMargin = Math.max(6, Math.min(30, Math.round(viewportHeight * 0.02)));
+    return { top: vMargin, right: hMargin, bottom: vMargin, left: hMargin };
+}
 
 /** Minimum viable dimension for the SVG to render */
 export const MIN_CHART_WIDTH = 100;
