@@ -5,7 +5,7 @@
 
 import { select } from "d3-selection";
 import { VarianceItem } from "../types";
-import { DIM_OPACITY } from "../constants";
+import { UNSELECTED_OPACITY } from "../constants";
 import powerbi from "powerbi-visuals-api";
 
 import ISelectionId = powerbi.visuals.ISelectionId;
@@ -44,7 +44,7 @@ export function applySelectionStyles(
                 .attr("stroke", selectedColor)
                 .attr("stroke-width", 2);
         } else {
-            group.style("opacity", String(DIM_OPACITY));
+            group.style("opacity", String(UNSELECTED_OPACITY));
             group.select(".variance-actual-bar").attr("stroke", null).attr("stroke-width", null);
         }
     });
@@ -52,9 +52,9 @@ export function applySelectionStyles(
     /* Dim variance indicators and labels when selection active */
     if (hasSelection) {
         d3svg.selectAll(".variance-delta-bar, .variance-lollipop-line, .variance-lollipop-dot, .variance-arrow-stem, .variance-arrow-head, .variance-connector, .variance-connector-vert, .variance-connector-horiz")
-            .style("opacity", String(DIM_OPACITY * 1.5));
+            .style("opacity", String(UNSELECTED_OPACITY * 1.5));
         d3svg.selectAll(".variance-label")
-            .style("opacity", String(DIM_OPACITY * 1.5));
+            .style("opacity", String(UNSELECTED_OPACITY * 1.5));
     } else {
         d3svg.selectAll(".variance-delta-bar, .variance-lollipop-line, .variance-lollipop-dot, .variance-arrow-stem, .variance-arrow-head, .variance-connector, .variance-connector-vert, .variance-connector-horiz")
             .style("opacity", null);
