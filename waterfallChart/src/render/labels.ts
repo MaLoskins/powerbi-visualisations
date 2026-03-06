@@ -20,11 +20,15 @@ export function renderValueLabels(
     bars: WaterfallBar[],
     scales: AxisScales,
     cfg: RenderConfig,
+    plotWidth?: number,
+    plotHeight?: number,
 ): void {
     g.selectAll("*").remove();
     if (!cfg.labels.showValueLabels) return;
 
     const isVertical = cfg.chart.orientation === "vertical";
+    const pw = plotWidth ?? Infinity;
+    const ph = plotHeight ?? Infinity;
 
     g.selectAll<SVGTextElement, WaterfallBar>(`.${CSS_PREFIX}value-label`)
         .data(bars)
@@ -45,23 +49,35 @@ export function renderValueLabels(
             const labelGap = Math.max(3, cfg.labels.labelFontSize * 0.5);
 
             if (isVertical) {
-                el.setAttribute("x", String(rect.x + rect.width / 2));
+                let xPos = rect.x + rect.width / 2;
+                let yPos: number;
                 if (pos === "inside") {
-                    el.setAttribute("y", String(rect.y + rect.height / 2));
+                    yPos = rect.y + rect.height / 2;
                 } else {
                     /* Above: place above the higher end of the bar */
                     const isPositive = d.top >= d.base;
-                    el.setAttribute("y", String(isPositive ? rect.y - labelGap : rect.y + rect.height + labelGap + cfg.labels.labelFontSize));
+                    yPos = isPositive ? rect.y - labelGap : rect.y + rect.height + labelGap + cfg.labels.labelFontSize;
                 }
+                /* Clamp to plot boundaries so labels don't overflow */
+                yPos = Math.max(cfg.labels.labelFontSize, Math.min(ph, yPos));
+                xPos = Math.max(0, Math.min(pw, xPos));
+                el.setAttribute("x", String(xPos));
+                el.setAttribute("y", String(yPos));
             } else {
-                el.setAttribute("y", String(rect.y + rect.height / 2));
+                let xPos: number;
+                let yPos = rect.y + rect.height / 2;
                 if (pos === "inside") {
-                    el.setAttribute("x", String(rect.x + rect.width / 2));
+                    xPos = rect.x + rect.width / 2;
                 } else {
                     const isPositive = d.top >= d.base;
-                    el.setAttribute("x", String(isPositive ? rect.x + rect.width + labelGap : rect.x - labelGap));
+                    xPos = isPositive ? rect.x + rect.width + labelGap : rect.x - labelGap;
                     el.setAttribute("text-anchor", isPositive ? "start" : "end");
                 }
+                /* Clamp to plot boundaries so labels don't overflow */
+                xPos = Math.max(0, Math.min(pw, xPos));
+                yPos = Math.max(0, Math.min(ph, yPos));
+                el.setAttribute("x", String(xPos));
+                el.setAttribute("y", String(yPos));
             }
         })
         .each(function (d) {

@@ -242,13 +242,35 @@ export class Visual implements IVisual {
         const gYAxis = select(this.yAxisGroup) as any;
         /* eslint-enable @typescript-eslint/no-explicit-any */
 
+        /* ── Clip path to prevent bars / labels from overflowing plot area ── */
+        const clipId = `${CSS_PREFIX}plot-clip`;
+        let defs = select(this.svgRoot).select<SVGDefsElement>("defs");
+        if (defs.empty()) {
+            defs = select(this.svgRoot).insert("defs", ":first-child");
+        }
+        defs.selectAll("*").remove();
+        const clipPath = defs.append("clipPath").attr("id", clipId);
+        /* Extend clip rect slightly beyond the plot area to allow "above" labels
+           a small amount of breathing room without letting them overflow the viewport */
+        const clipPad = cfg.labels.labelFontSize + 4;
+        clipPath.append("rect")
+            .attr("x", -clipPad)
+            .attr("y", -clipPad)
+            .attr("width", plotWidth + clipPad * 2)
+            .attr("height", plotHeight + clipPad * 2);
+
+        /* Apply clip-path to bar, value-label, and running-label groups */
+        gBars.attr("clip-path", `url(#${clipId})`);
+        gVLabels.attr("clip-path", `url(#${clipId})`);
+        gRLabels.attr("clip-path", `url(#${clipId})`);
+
         renderGridlines(gGrid, scales, plotWidth, plotHeight, cfg);
         renderBaseline(gBase, scales, plotWidth, plotHeight, cfg);
         renderConnectors(gConn, this.bars, scales, cfg);
         renderBars(gBars, this.bars, scales, cfg, this.buildCallbacks());
-        renderValueLabels(gVLabels, this.bars, scales, cfg);
+        renderValueLabels(gVLabels, this.bars, scales, cfg, plotWidth, plotHeight);
         renderRunningTotalLabels(gRLabels, this.bars, scales, cfg);
-        renderXAxis(gXAxis, scales, plotHeight, cfg);
+        renderXAxis(gXAxis, scales, plotHeight, plotWidth, cfg);
         renderYAxis(gYAxis, scales, cfg);
 
         /* ── Re-apply selection styles ── */

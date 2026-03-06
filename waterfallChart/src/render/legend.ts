@@ -6,7 +6,7 @@
 "use strict";
 
 import { RenderConfig, BarType, WaterfallBar } from "../types";
-import { CSS_PREFIX, FONT_STACK, LEGEND_SWATCH_SIZE, LEGEND_ITEM_GAP, LEGEND_HEIGHT_MAX } from "../constants";
+import { CSS_PREFIX, FONT_STACK, LEGEND_SWATCH_SIZE, LEGEND_ITEM_GAP, LEGEND_HEIGHT_MAX, LEGEND_LABEL_MAX_WIDTH } from "../constants";
 import { resolveBarColor } from "./chart";
 
 interface LegendEntry {
@@ -78,6 +78,8 @@ export function renderLegend(
         label.style.overflow = "hidden";
         label.style.textOverflow = "ellipsis";
         label.style.whiteSpace = "nowrap";
+        label.style.maxWidth = LEGEND_LABEL_MAX_WIDTH + "px";
+        label.title = entry.label;
 
         item.appendChild(swatch);
         item.appendChild(label);
