@@ -4,20 +4,10 @@
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
 
-.tcloud-container {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
-}
+@import "../../shared/theme/theme-base";
 
-.tcloud-container *,
-.tcloud-container *::before,
-.tcloud-container *::after {
-    box-sizing: border-box;
+.tcloud-container {
+    .theme-container-base();
 }
 
 /* ── SVG Canvas ── */
@@ -32,7 +22,7 @@
 
 .tcloud-word {
     cursor: pointer;
-    transition: opacity 0.1s ease;
+    transition: opacity @transition-fast ease;
 }
 
 .tcloud-word:hover {
@@ -40,26 +30,11 @@
 }
 
 .tcloud-word-dimmed {
-    opacity: 0.25;
+    .theme-dimmed();
 }
 
 /* ── Error Overlay ── */
 
 .tcloud-error {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 24px;
-    color: #64748B;
-    font-size: 13px;
-    line-height: 1.5;
-    white-space: pre-line;
-    background: #FFFFFF;
-    z-index: 10;
+    .theme-error-overlay();
 }

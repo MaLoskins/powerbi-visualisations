@@ -1,0 +1,152 @@
+/* ═══════════════════════════════════════════════
+   Shared Design System — Base LESS Styles
+   ═══════════════════════════════════════════════
+   Imported by each visual's style/visual.less
+   via: @import "../../shared/theme/theme-base";
+
+   Contains ONLY design tokens and reusable
+   structural patterns. Module-specific layout
+   and component styling remains in each visual's
+   own visual.less file.
+   ═══════════════════════════════════════════════ */
+
+/* ── Design Token Variables ────────────────────── */
+
+/* Slate scale (foundation greys) */
+@slate-50:  #F8FAFC;
+@slate-100: #F1F5F9;
+@slate-200: #E2E8F0;
+@slate-300: #CBD5E1;
+@slate-400: #94A3B8;
+@slate-500: #64748B;
+@slate-600: #475569;
+@slate-700: #334155;
+@slate-800: #1E293B;
+@slate-900: #0F172A;
+
+/* Accent blue scale */
+@blue-50:  #EFF6FF;
+@blue-500: #3B82F6;
+@blue-600: #2563EB;
+@blue-700: #1D4ED8;
+
+/* Semantic colours */
+@red-500:     #EF4444;
+@red-600:     #DC2626;
+@amber-500:   #F59E0B;
+@emerald-500: #10B981;
+@orange-500:  #F97316;
+
+/* Typography */
+@font-stack: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@base-font-size: 11px;
+@error-font-size: 13px;
+
+/* Row striping */
+@row-even-bg: #FFFFFF;
+@row-odd-bg:  @slate-50;
+
+/* Selection */
+@dim-opacity: 0.25;
+
+/* Scrollbar defaults */
+@sb-width:      8px;
+@sb-track:      @slate-100;
+@sb-thumb:      @slate-300;
+@sb-thumb-hover: @slate-400;
+@sb-radius:     4px;
+
+/* Transitions */
+@transition-fast: 0.1s;
+@transition-normal: 0.15s;
+
+/* ── Mixins ────────────────────────────────────── */
+
+/* Box-sizing reset for a visual container and all descendants.
+   Usage:  .my-container { .theme-box-reset(); }  */
+.theme-box-reset() {
+    box-sizing: border-box;
+    *, *::before, *::after { box-sizing: border-box; }
+}
+
+/* Standard visual container base.
+   Usage:  .my-container { .theme-container-base(); }  */
+.theme-container-base() {
+    .theme-box-reset();
+    position: relative;
+    overflow: hidden;
+    font-family: @font-stack;
+    font-size: @base-font-size;
+    width: 100%;
+    height: 100%;
+}
+
+/* Error overlay – centred message on white background.
+   Usage:  .my-error { .theme-error-overlay(); }  */
+.theme-error-overlay() {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: @slate-500;
+    font-size: @error-font-size;
+    line-height: 1.6;
+    white-space: pre-line;
+    background: #FFFFFF;
+    z-index: 10;
+}
+
+/* Custom scrollbar styling (slim, themed).
+   Usage:  .my-scroll-area { .theme-scrollbar(); }  */
+.theme-scrollbar(@width: @sb-width) {
+    scrollbar-width: thin;
+    scrollbar-color: @sb-thumb @sb-track;
+
+    &::-webkit-scrollbar {
+        width: @width;
+        height: @width;
+    }
+    &::-webkit-scrollbar-track {
+        background: @sb-track;
+        border-radius: @sb-radius;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: @sb-thumb;
+        border-radius: @sb-radius;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: @sb-thumb-hover;
+    }
+}
+
+/* Hidden scrollbar (for synced scroll panes).
+   Usage:  .my-hidden-scroll { .theme-scrollbar-hidden(); }  */
+.theme-scrollbar-hidden() {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+/* Hover brightness effect.
+   Usage:  .my-element:hover { .theme-hover-brighten(); }  */
+.theme-hover-brighten(@amount: 1.08) {
+    filter: brightness(@amount);
+}
+
+/* Dimmed state for unselected elements during selection.
+   Usage:  .my-element-dimmed { .theme-dimmed(); }  */
+.theme-dimmed(@opacity: @dim-opacity) {
+    opacity: @opacity;
+}
+
+/* Standard interactive cursor + transition.
+   Usage:  .my-clickable { .theme-interactive(); }  */
+.theme-interactive() {
+    cursor: pointer;
+    transition: opacity @transition-fast ease;
+}

@@ -4,6 +4,8 @@
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
 
+@import "../../shared/theme/theme-base";
+
 .gantt-container {
     --sb-width: 8px;
     --sb-track: #F0F0F0;
@@ -20,8 +22,8 @@
 .gantt-container {
     position: relative;
     overflow: hidden;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
+    font-family: @font-stack;
+    font-size: @base-font-size;
     color: #333;
     background: #fff;
     display: flex;
@@ -39,7 +41,7 @@
     z-index: 100;
     background: #fff;
     color: #888;
-    font-size: 13px;
+    font-size: @error-font-size;
     justify-content: center;
     align-items: center;
     text-align: center;
@@ -75,7 +77,7 @@
     font-family: inherit;
     cursor: pointer;
     outline: none;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: background @transition-fast, border-color @transition-fast, color @transition-fast;
     white-space: nowrap;
 }
 
@@ -92,7 +94,7 @@
     font-family: inherit;
     color: #333;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color @transition-fast, box-shadow @transition-fast;
 }
 
 .gantt-search-input:focus { border-color: #0078d4; box-shadow: 0 0 0 1px rgba(0, 120, 212, 0.2); }
@@ -106,7 +108,7 @@
     flex-shrink: 0;
     cursor: col-resize;
     background: #d0d0d0;
-    transition: background 0.15s;
+    transition: background @transition-fast;
     z-index: 10;
 }
 
@@ -118,15 +120,14 @@
 .gantt-grid-header-row { display: flex; width: 100%; font-weight: 600; }
 
 .gantt-grid-body { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
-.gantt-grid-body::-webkit-scrollbar { width: 0; height: 0; }
-.gantt-grid-body { scrollbar-width: none; }
+.gantt-grid-body { .theme-scrollbar-hidden(); }
 
 .gantt-grid-row {
     display: flex;
     align-items: center;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background @transition-fast;
 }
 
 .gantt-grid-row:hover { background: rgba(0, 120, 212, 0.06) !important; }
@@ -139,7 +140,7 @@
 .gantt-grid-cell-num { width: 44px; text-align: center; font-size: 10px; color: #666; }
 .gantt-grid-cell-extra { width: 72px; text-align: left; font-size: 10px; color: #666; }
 
-.gantt-toggle { cursor: pointer; user-select: none; width: 14px; flex-shrink: 0; text-align: center; font-size: 11px; color: #666; }
+.gantt-toggle { cursor: pointer; user-select: none; width: 14px; flex-shrink: 0; text-align: center; font-size: @base-font-size; color: #666; }
 .gantt-toggle:hover { color: #0078d4; }
 .gantt-toggle-spacer { width: 14px; flex-shrink: 0; display: inline-block; }
 .gantt-task-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -154,7 +155,7 @@
 /* ── SVG elements ── */
 .gantt-hline { stroke: #f0f0f0; stroke-width: 0.5; }
 .gantt-vline { pointer-events: none; }
-.gantt-bar { cursor: pointer; transition: opacity 0.15s; }
+.gantt-bar { cursor: pointer; transition: opacity @transition-normal; }
 .gantt-bar-group { cursor: pointer; }
 .gantt-progress { pointer-events: none; }
 .gantt-bar-progress-label { pointer-events: none; text-shadow: 0 0 3px rgba(0, 0, 0, 0.6); }

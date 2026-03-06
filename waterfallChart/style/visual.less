@@ -3,21 +3,10 @@
    H1: Reduced nesting, reusable classes
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
+@import "../../shared/theme/theme-base";
 
 .waterfall-container {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: relative;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
-}
-
-.waterfall-container *,
-.waterfall-container *::before,
-.waterfall-container *::after {
-    box-sizing: border-box;
+    .theme-container-base();
 }
 
 /* ── SVG root ── */
@@ -30,7 +19,7 @@
 /* ── Bars ── */
 
 .waterfall-bar {
-    transition: opacity 0.1s ease;
+    transition: opacity @transition-fast ease;
 }
 
 .waterfall-bar:hover {
@@ -90,20 +79,7 @@
 /* ── Error overlay ── */
 
 .waterfall-error {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #64748B;
-    font-size: 13px;
+    .theme-error-overlay();
     line-height: 1.5;
     padding: 20px;
-    white-space: pre-line;
-    background: #FFFFFF;
-    z-index: 10;
 }

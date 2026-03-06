@@ -4,21 +4,12 @@
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
 
+@import "../../shared/theme/theme-base";
+
 .apie-container {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
+    .theme-container-base();
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
-}
-
-.apie-container *,
-.apie-container *::before,
-.apie-container *::after {
-    box-sizing: border-box;
 }
 
 /* ── Layout ── */
@@ -62,7 +53,7 @@
 }
 
 .apie-legend-item {
-    transition: opacity 0.15s ease;
+    transition: opacity @transition-normal ease;
     user-select: none;
 }
 
@@ -73,12 +64,12 @@
 /* ── Slices ── */
 
 .apie-slice {
-    transition: opacity 0.15s ease;
+    transition: opacity @transition-normal ease;
     transform-origin: center center;
 }
 
 .apie-outer-slice {
-    transition: opacity 0.15s ease;
+    transition: opacity @transition-normal ease;
 }
 
 /* ── Labels ── */
@@ -104,22 +95,8 @@
 /* ── Error Overlay ── */
 
 .apie-error {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 24px;
-    color: #64748B;
-    font-size: 13px;
-    line-height: 1.5;
-    white-space: pre-line;
+    .theme-error-overlay();
     background: rgba(255, 255, 255, 0.95);
-    z-index: 10;
 }
 
 /* ── Background ── */

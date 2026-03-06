@@ -1,15 +1,19 @@
 /* ═══════════════════════════════════════════════
-   Packed Bubble Chart – Colour Utilities
+   Shared Design System — Colour Utilities
+   ═══════════════════════════════════════════════
+   Single Source of Truth for colour manipulation
+   functions shared across all Power BI visuals.
+   Run `sync_theme.sh` to propagate into each
+   module's utils/color.ts.
    ═══════════════════════════════════════════════ */
 
 "use strict";
 
 import { RESOURCE_COLORS, STATUS_COLORS, PASTEL_COLORS, VIVID_COLORS } from "../constants";
 
-/* ── [SHARED COLOR UTILS START] ──────────────────
-   Auto-generated from shared/theme/color-utils.ts
-   Do NOT edit manually — run sync_theme.sh
-   ────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   Hex Validation & Conversion
+   ═══════════════════════════════════════════════ */
 
 const HEX_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
@@ -24,10 +28,18 @@ export function safeHex(value: string | undefined | null, fallback: string): str
     return fallback;
 }
 
-/** Alias for safeHex. */
+/** Alias for safeHex — validates a hex colour with a fallback. */
 export const validHex = safeHex;
 
-interface HSL { h: number; s: number; l: number; }
+/* ═══════════════════════════════════════════════
+   Colour Space Conversions
+   ═══════════════════════════════════════════════ */
+
+interface HSL {
+    h: number; /* 0-360 */
+    s: number; /* 0-100 */
+    l: number; /* 0-100 */
+}
 
 /** Parse a hex colour string to {r, g, b} (0-255). */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -43,34 +55,43 @@ export function rgbToHex(r: number, g: number, b: number): string {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-/** Convert a hex colour to an rgba() string. */
+/** Convert a hex colour to an rgba() string with the given opacity (0-1). */
 export function hexToRgba(hex: string, opacity: number): string {
     const { r, g, b } = hexToRgb(hex);
     return `rgba(${r},${g},${b},${opacity})`;
 }
 
+/** Convert RGB (0-255) to HSL. */
 function rgbToHsl(r: number, g: number, b: number): HSL {
-    const rn = r / 255, gn = g / 255, bn = b / 255;
-    const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+    const rn = r / 255;
+    const gn = g / 255;
+    const bn = b / 255;
+    const max = Math.max(rn, gn, bn);
+    const min = Math.min(rn, gn, bn);
     const l = (max + min) / 2;
     if (max === min) return { h: 0, s: 0, l: l * 100 };
+
     const d = max - min;
     const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     let h = 0;
     if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
     else if (max === gn) h = ((bn - rn) / d + 2) / 6;
     else h = ((rn - gn) / d + 4) / 6;
+
     return { h: h * 360, s: s * 100, l: l * 100 };
 }
 
+/** Convert HSL to hex. */
 function hslToHex(h: number, s: number, l: number): string {
-    const sn = s / 100, ln = l / 100;
+    const sn = s / 100;
+    const ln = l / 100;
     const a = sn * Math.min(ln, 1 - ln);
     const f = (n: number): number => {
         const k = (n + h / 30) % 12;
         return ln - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
     };
-    const toHex = (x: number): string => Math.round(x * 255).toString(16).padStart(2, "0");
+    const toHex = (x: number): string =>
+        Math.round(x * 255).toString(16).padStart(2, "0");
     return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`.toUpperCase();
 }
 
@@ -80,26 +101,40 @@ export function hexToHsl(hex: string): HSL {
     return rgbToHsl(r, g, b);
 }
 
-/** Lighten a hex colour by increasing HSL lightness. */
+/* ═══════════════════════════════════════════════
+   Colour Manipulation
+   ═══════════════════════════════════════════════ */
+
+/** Lighten a hex colour by increasing its HSL lightness. */
 export function lightenColor(hex: string, amount: number = 15): string {
     const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s, Math.min(95, hsl.l + amount));
+    const newL = Math.min(95, hsl.l + amount);
+    return hslToHex(hsl.h, hsl.s, newL);
 }
 
 /** Darken a hex colour by reducing channel values. amount 0-1. */
 export function darkenHex(hex: string, amount: number): string {
     const { r, g, b } = hexToRgb(hex);
-    const f = 1 - amount;
-    return rgbToHex(r * f, g * f, b * f);
+    const factor = 1 - amount;
+    return rgbToHex(r * factor, g * factor, b * factor);
 }
 
-/** Interpolate between two hex colours. t=0 → c1, t=1 → c2. */
+/** Interpolate between two hex colours. t=0 returns c1, t=1 returns c2. */
 export function interpolateColor(c1: string, c2: string, t: number): string {
-    const a = hexToRgb(c1), b = hexToRgb(c2);
-    return rgbToHex(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t);
+    const a = hexToRgb(c1);
+    const b = hexToRgb(c2);
+    return rgbToHex(
+        a.r + (b.r - a.r) * t,
+        a.g + (b.g - a.g) * t,
+        a.b + (b.b - a.b) * t,
+    );
 }
 
-/** Get a colour from RESOURCE_COLORS by index (wraps). */
+/* ═══════════════════════════════════════════════
+   Palette Resolution
+   ═══════════════════════════════════════════════ */
+
+/** Get a colour from RESOURCE_COLORS by index (wraps around). */
 export function resourceColor(index: number): string {
     return RESOURCE_COLORS[index % RESOURCE_COLORS.length];
 }
@@ -111,7 +146,9 @@ export function resolveStatusColor(status: string): string | undefined {
 
 /** Assign or retrieve a colour for a resource/category from a persistent map. */
 export function assignResourceColor(
-    resource: string, map: Map<string, string>, counter: { idx: number },
+    resource: string,
+    map: Map<string, string>,
+    counter: { idx: number },
 ): string {
     let c = map.get(resource);
     if (!c) {
@@ -133,66 +170,57 @@ export function getPaletteColors(palette: string): readonly string[] {
 
 /** Get N colours from the default RESOURCE_COLORS cycle. */
 export function getDefaultPalette(n: number): string[] {
-    return Array.from({ length: n }, (_, i) => RESOURCE_COLORS[i % RESOURCE_COLORS.length]);
+    const result: string[] = [];
+    for (let i = 0; i < n; i++) {
+        result.push(RESOURCE_COLORS[i % RESOURCE_COLORS.length]);
+    }
+    return result;
 }
 
 /** Generate pastel palette: RESOURCE_COLORS hues with S=70%, L=80%. */
 export function getPastelPalette(n: number): string[] {
-    return Array.from({ length: n }, (_, i) => {
-        const hsl = hexToHsl(RESOURCE_COLORS[i % RESOURCE_COLORS.length]);
-        return hslToHex(hsl.h, 70, 80);
-    });
+    const result: string[] = [];
+    for (let i = 0; i < n; i++) {
+        const base = RESOURCE_COLORS[i % RESOURCE_COLORS.length];
+        const hsl = hexToHsl(base);
+        result.push(hslToHex(hsl.h, 70, 80));
+    }
+    return result;
 }
 
 /** Generate vivid palette: RESOURCE_COLORS hues with S=100%, L=50%. */
 export function getVividPalette(n: number): string[] {
-    return Array.from({ length: n }, (_, i) => {
-        const hsl = hexToHsl(RESOURCE_COLORS[i % RESOURCE_COLORS.length]);
-        return hslToHex(hsl.h, 100, 50);
-    });
+    const result: string[] = [];
+    for (let i = 0; i < n; i++) {
+        const base = RESOURCE_COLORS[i % RESOURCE_COLORS.length];
+        const hsl = hexToHsl(base);
+        result.push(hslToHex(hsl.h, 100, 50));
+    }
+    return result;
 }
 
-/** Generate monochrome palette: N shades from L=85% to L=30% of baseHex. */
+/** Generate monochrome palette: N shades from L=85% down to L=30% of baseHex. */
 export function getMonochromePalette(n: number, baseHex: string): string[] {
     const hsl = hexToHsl(baseHex);
-    return Array.from({ length: n }, (_, i) => {
+    const result: string[] = [];
+    for (let i = 0; i < n; i++) {
         const t = n > 1 ? i / (n - 1) : 0;
-        return hslToHex(hsl.h, hsl.s, 85 - t * 55);
-    });
+        const lightness = 85 - t * 55; /* 85% -> 30% */
+        result.push(hslToHex(hsl.h, hsl.s, lightness));
+    }
+    return result;
 }
 
 /** Resolve a full colour palette based on type, count, and optional monochrome base. */
-export function resolvePalette(palette: string, count: number, monochromeBase: string): string[] {
+export function resolvePalette(
+    palette: string,
+    count: number,
+    monochromeBase: string,
+): string[] {
     switch (palette) {
         case "pastel":     return getPastelPalette(count);
         case "vivid":      return getVividPalette(count);
         case "monochrome": return getMonochromePalette(count, monochromeBase);
         default:           return getDefaultPalette(count);
     }
-}
-
-/* ── [SHARED COLOR UTILS END] ────────────────── */
-
-/** Check if a string is a valid hex colour (null-safe) */
-export function isValidHex(value: string | null | undefined): boolean {
-    return typeof value === "string" && isHexColor(value.trim());
-}
-
-/** Resolve bubble fill colour. Priority: explicit colorField → group palette → default */
-export function resolveBubbleColor(
-    colorHex: string | null, group: string | null, groupIndex: number,
-    colorByGroup: boolean, defaultColor: string,
-): string {
-    if (colorHex && isValidHex(colorHex)) return colorHex.trim();
-    if (colorByGroup && group !== null && groupIndex >= 0) return resourceColor(groupIndex);
-    return defaultColor;
-}
-
-/** Build a group → colour map from the RESOURCE_COLORS palette */
-export function buildGroupColorMap(groups: string[]): Map<string, string> {
-    const map = new Map<string, string>();
-    for (let i = 0; i < groups.length; i++) {
-        map.set(groups[i], resourceColor(i));
-    }
-    return map;
 }

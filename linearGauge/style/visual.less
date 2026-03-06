@@ -3,43 +3,20 @@
    H1: Reduced nesting, reusable classes
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
+@import "../../shared/theme/theme-base";
 
 .lgauge-container {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
+    .theme-container-base();
     display: flex;
     flex-direction: row;
-    overflow: hidden;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
-    position: relative;
-}
-
-.lgauge-container *,
-.lgauge-container *::before,
-.lgauge-container *::after {
-    box-sizing: border-box;
 }
 
 /* ── Error Overlay ── */
 
 .lgauge-error {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #64748B;
+    .theme-error-overlay();
     font-size: 12px;
-    white-space: pre-line;
     padding: 16px;
-    z-index: 10;
-    background: #FFFFFF;
 }
 
 /* ── Category Labels Column ── */
@@ -64,25 +41,7 @@
     flex: 1;
     min-width: 0;
     overflow: auto;
-    scrollbar-width: thin;
-}
-
-.lgauge-svg-wrap::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.lgauge-svg-wrap::-webkit-scrollbar-track {
-    background: #F1F5F9;
-}
-
-.lgauge-svg-wrap::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
-    border-radius: 3px;
-}
-
-.lgauge-svg-wrap::-webkit-scrollbar-thumb:hover {
-    background: #94A3B8;
+    .theme-scrollbar(6px);
 }
 
 /* ── SVG ── */
@@ -94,7 +53,7 @@
 /* ── Gauge Rows ── */
 
 .lgauge-row {
-    transition: opacity 0.1s ease;
+    transition: opacity @transition-fast ease;
 }
 
 /* ── Hit Area ── */
@@ -117,5 +76,5 @@
 .lgauge-category-label-v {
     pointer-events: none;
     user-select: none;
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: @font-stack;
 }

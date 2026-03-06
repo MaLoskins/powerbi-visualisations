@@ -58,13 +58,20 @@ Assume strict TS rules are ON.
 ```
 POWERBI/
 ├── DEVELOPER-README.md          <-- this file (root-level)
+├── shared/                      <-- shared design system (SSoT)
+│   └── theme/
+│       ├── palette.ts           <-- canonical palettes & tokens
+│       ├── color-utils.ts       <-- canonical colour utilities
+│       └── theme-base.less      <-- shared LESS variables & mixins
+├── sync_theme.sh                <-- propagates shared theme into modules
+├── build_all_visuals.sh         <-- builds all visuals
 ├── GanttChart/                  <-- reference visual
 ├── advancedGauge/
 ├── waterfallChart/
 └── …
 ```
 
-Each visual is a standalone `pbiviz` project with its own `package.json`, `tsconfig.json`, and `pbiviz.json`. There is no shared workspace or monorepo tooling - visuals are independent and packageable in isolation.
+Each visual is a standalone `pbiviz` project with its own `package.json`, `tsconfig.json`, and `pbiviz.json`. Visuals are independently packageable, but share a common design system via the `shared/theme/` directory (see Section 3).
 
 ---
 
@@ -132,7 +139,44 @@ Every visual **must** follow this directory layout. The exact set of sub-folders
 
 ## 3. Design System - "Slate + Blue"
 
-All visuals share a single design language. Default colour values in `settings.ts` **must** draw from this palette.
+All visuals share a single design language. The design system is defined once in `shared/theme/` and propagated to each module.
+
+### 3.0 Shared Theme Architecture
+
+The shared theme consists of three files at the repository root:
+
+| File | Purpose | Consumed by |
+|------|---------|-------------|
+| `shared/theme/palette.ts` | Canonical palettes, design tokens, semantic colours | `sync_theme.sh` → each module's `constants.ts` |
+| `shared/theme/color-utils.ts` | Colour manipulation utilities (hex validation, HSL conversion, palette generation) | `sync_theme.sh` → each module's `utils/color.ts` |
+| `shared/theme/theme-base.less` | LESS variables and mixins (reset, container, error overlay, scrollbar) | `@import` from each module's `style/visual.less` |
+
+#### How it works
+
+- **TypeScript** (`constants.ts`, `utils/color.ts`): Because `pbiviz` cannot resolve cross-project imports, these files are synced via `sync_theme.sh`. Each module's file contains marker comments (`[SHARED THEME START]`/`[SHARED THEME END]` and `[SHARED COLOR UTILS START]`/`[SHARED COLOR UTILS END]`) that delimit the auto-generated shared section. Module-specific constants and functions live **outside** these markers.
+- **LESS** (`visual.less`): Each module imports the shared base via `@import "../../shared/theme/theme-base";` at the top of its `visual.less`. The LESS preprocessor resolves this relative path at build time.
+
+#### Workflow
+
+1. **Edit** the shared files in `shared/theme/` to change design tokens, palettes, or utilities.
+2. **Run** `./sync_theme.sh` to propagate TypeScript changes into all modules.
+3. **Build** visuals normally — LESS changes are picked up automatically via `@import`.
+
+```bash
+# Sync shared theme into all modules
+./sync_theme.sh
+
+# Sync a single module
+./sync_theme.sh GanttChart
+
+# Build all
+./build_all_visuals.sh
+```
+
+**Rules:**
+- Never edit content between `[SHARED THEME START]` and `[SHARED THEME END]` markers in module files — it will be overwritten.
+- Module-specific constants and functions go **after** the shared block's end marker.
+- Always run `sync_theme.sh` after editing `shared/theme/palette.ts` or `shared/theme/color-utils.ts`.
 
 ### Base Palette (Tailwind Slate)
 
@@ -683,7 +727,7 @@ When creating a new visual, verify every item:
 
 - [ ] Folder structure matches the prompt's FILE STRUCTURE section (see Section 2 for conventions)
 - [ ] `types.ts` defines domain interface + `RenderConfig` + all literal unions via `as const`
-- [ ] `constants.ts` uses `RESOURCE_COLORS` and `STATUS_COLORS` from the shared palette
+- [ ] `constants.ts` contains `[SHARED THEME START]`/`[SHARED THEME END]` markers with shared palette (run `sync_theme.sh`)
 - [ ] `settings.ts` uses slice factories (`num`, `pct`, `color`, `toggle`, `dropdown`)
 - [ ] `settings.ts` exports `buildRenderConfig()` with percent --> fraction conversion
 - [ ] `settings.ts` does not import `constants.ts` - palette defaults use literal hex strings
@@ -694,6 +738,8 @@ When creating a new visual, verify every item:
 - [ ] Render functions accept callback objects for interactions
 - [ ] All CSS classes use the visual's registered prefix from Appendix B
 - [ ] `visual.less` uses the standard font stack and `box-sizing` reset
+- [ ] `utils/color.ts` contains `[SHARED COLOR UTILS START]`/`[SHARED COLOR UTILS END]` markers (run `sync_theme.sh`)
+- [ ] `visual.less` imports shared theme: `@import "../../shared/theme/theme-base";`
 - [ ] Default colours draw exclusively from the Slate + Blue palette
 - [ ] No `enum` keyword - use `as const` + derived union types
 - [ ] No `any` except documented Power BI SDK workarounds
@@ -764,7 +810,9 @@ cd <visualName>
 # Copy eslint.config.mjs from GanttChart/
 # Copy slice factories from GanttChart/src/settings.ts
 # Copy utils/ folder from GanttChart/src/utils/ (dom.ts, color.ts, date.ts)
-# Copy RESOURCE_COLORS and STATUS_COLORS into constants.ts
+# Run sync_theme.sh to populate shared palette and colour utilities:
+cd .. && ./sync_theme.sh <visualName> && cd <visualName>
+# Add @import "../../shared/theme/theme-base"; to style/visual.less
 # Define your domain interface, RenderConfig, and literal unions in types.ts
 # Wire everything through visual.ts
 ```

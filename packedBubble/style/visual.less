@@ -3,18 +3,12 @@
    H1: Reduced nesting, reusable classes
    H2: CSS variables for dynamic styling
    ═══════════════════════════════════════════════ */
+@import "../../shared/theme/theme-base";
 
 /* ── Reset ── */
 
-.pbubble-container,
-.pbubble-container * {
-    box-sizing: border-box;
-}
-
 .pbubble-container {
-    font-family: "Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 11px;
-    position: relative;
+    .theme-container-base();
     user-select: none;
     -webkit-user-select: none;
 }
@@ -31,7 +25,7 @@
 
 .pbubble-circle {
     cursor: pointer;
-    transition: fill-opacity 0.15s ease;
+    transition: fill-opacity @transition-normal ease;
 }
 
 .pbubble-circle:hover {
@@ -66,21 +60,8 @@
 /* ── Error Overlay ── */
 
 .pbubble-error {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
+    .theme-error-overlay();
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #64748B;
-    font-size: 13px;
-    padding: 24px;
-    background: #FFFFFF;
-    z-index: 10;
 }
 
 .pbubble-error p {
