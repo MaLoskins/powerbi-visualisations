@@ -49,16 +49,24 @@
     pointer-events: none;
 }
 
+/* ── Plot area (clip children that overflow) ── */
+
+.waterfall-plot {
+    overflow: hidden;
+}
+
 /* ── Value labels ── */
 
 .waterfall-value-label {
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
 }
 
 .waterfall-running-label {
     pointer-events: none;
     user-select: none;
+    overflow: hidden;
 }
 
 /* ── Axis ticks ── */
@@ -71,6 +79,8 @@
 .waterfall-x-tick text,
 .waterfall-y-tick text {
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Legend ── */

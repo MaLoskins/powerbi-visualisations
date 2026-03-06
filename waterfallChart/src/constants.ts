@@ -145,6 +145,8 @@ export const LEGEND_HEIGHT_FRACTION = 0.05;
 export const LEGEND_HEIGHT_MIN = 22;
 /** Maximum legend height in pixels */
 export const LEGEND_HEIGHT_MAX = 40;
+/** Maximum width of a single legend label in pixels */
+export const LEGEND_LABEL_MAX_WIDTH = 120;
 
 /** Maximum number of characters for axis category labels before truncation */
 export const MAX_AXIS_LABEL_CHARS = 18;
