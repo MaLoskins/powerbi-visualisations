@@ -30,14 +30,18 @@ export function renderLegend(
     container.style.flexWrap = "wrap";
     container.style.alignItems = "center";
     container.style.gap = LEGEND_ITEM_GAP + "px";
-    container.style.padding = "4px 0";
+    container.style.padding = "4px 8px";
     container.style.fontFamily = FONT_FAMILY;
     container.style.fontSize = cfg.legendFontSize + "px";
     container.style.color = cfg.legendFontColor;
+    container.style.overflowY = "auto";
+    container.style.overflowX = "hidden";
 
     if (cfg.legendPosition === "right") {
         container.style.flexDirection = "column";
+        container.style.flexWrap = "nowrap";
         container.style.alignItems = "flex-start";
+        container.style.gap = "6px";
     } else {
         container.style.flexDirection = "row";
         container.style.justifyContent = "center";
@@ -59,6 +63,15 @@ export function renderLegend(
         swatch.style.flexShrink = "0";
 
         const label = el("span", "marimekko-legend-label", cat);
+        label.style.overflow = "hidden";
+        label.style.textOverflow = "ellipsis";
+        label.style.whiteSpace = "nowrap";
+        if (cfg.legendPosition === "right") {
+            label.style.maxWidth = "100px";
+        } else {
+            label.style.maxWidth = "120px";
+        }
+        label.title = cat; /* Full text on hover */
 
         item.appendChild(swatch);
         item.appendChild(label);

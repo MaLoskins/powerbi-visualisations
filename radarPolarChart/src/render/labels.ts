@@ -36,16 +36,23 @@ export function renderGridLabels(
         const fraction = level / gridLevels;
         const value = isPercentage ? fraction : scaleMin + fraction * (scaleMax - scaleMin);
 
+        const labelOffset = Math.max(2, gridLabelFontSize * 0.4);
         g.append("text")
             .attr("class", "radar-grid-label")
-            .attr("x", x + 4)
-            .attr("y", y - 4)
+            .attr("x", x + labelOffset)
+            .attr("y", y - labelOffset)
             .attr("font-size", gridLabelFontSize + "px")
             .attr("fill", gridLabelFontColor)
             .attr("text-anchor", "start")
             .attr("dominant-baseline", "auto")
             .text(formatValue(value, isPercentage));
     }
+}
+
+/** Truncate a label to fit within a max character count */
+function truncateLabel(text: string, maxChars: number): string {
+    if (text.length <= maxChars) return text;
+    return text.slice(0, maxChars - 1).trimEnd() + "\u2026";
 }
 
 /** Render axis category labels just outside the outermost grid */
@@ -61,6 +68,9 @@ export function renderAxisLabels(
 
     const { cx, cy, radius, spokeAngles } = layout;
     const { axisFontSize, axisFontColor, labelPadding } = cfg.axisLabel;
+
+    /* Scale max label length with radius so small visuals get shorter labels */
+    const maxLabelChars = Math.max(8, Math.round(radius / (axisFontSize * 0.45)));
 
     for (let i = 0; i < axes.length; i++) {
         const angle = spokeAngles[i];
@@ -87,6 +97,8 @@ export function renderAxisLabels(
             dy = "0.71em";
         }
 
+        const displayText = truncateLabel(axes[i], maxLabelChars);
+
         g.append("text")
             .attr("class", "radar-axis-label")
             .attr("x", x)
@@ -95,6 +107,6 @@ export function renderAxisLabels(
             .attr("font-size", axisFontSize + "px")
             .attr("fill", axisFontColor)
             .attr("text-anchor", anchor)
-            .text(axes[i]);
+            .text(displayText);
     }
 }

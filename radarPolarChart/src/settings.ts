@@ -22,22 +22,12 @@ function num(
     name: string,
     displayName: string,
     value: number,
-    _minVal?: number,
-    _maxVal?: number,
 ): formattingSettings.NumUpDown {
     return new formattingSettings.NumUpDown({
         name,
         displayName,
         value,
     });
-}
-
-function pct(
-    name: string,
-    displayName: string,
-    defaultPct: number,
-): formattingSettings.NumUpDown {
-    return num(name, displayName, defaultPct, 0, 100);
 }
 
 function color(
@@ -90,10 +80,10 @@ function dropdown(
 /* ── Chart Settings ── */
 
 class ChartSettingsCard extends FormattingSettingsCard {
-    startAngle   = num("startAngle", "Start Angle (°)", -90, -180, 180);
-    fillOpacity  = pct("fillOpacity", "Fill Opacity (%)", 25);
-    strokeWidth  = num("strokeWidth", "Stroke Width", 2, 1, 6);
-    dotRadius    = num("dotRadius", "Dot Radius", 4, 0, 10);
+    startAngle   = num("startAngle", "Start Angle (°)", -90);
+    fillOpacity  = num("fillOpacity", "Fill Opacity (%)", 25);
+    strokeWidth  = num("strokeWidth", "Stroke Width", 2);
+    dotRadius    = num("dotRadius", "Dot Radius", 4);
     showDots     = toggle("showDots", "Show Dots", true);
     smoothCurve  = toggle("smoothCurve", "Smooth Curve", false);
 
@@ -108,15 +98,15 @@ class ChartSettingsCard extends FormattingSettingsCard {
 /* ── Grid Settings ── */
 
 class GridSettingsCard extends FormattingSettingsCard {
-    gridLevels        = num("gridLevels", "Grid Levels", 5, 2, 10);
+    gridLevels        = num("gridLevels", "Grid Levels", 5);
     gridShape         = dropdown("gridShape", "Grid Shape", GRID_SHAPES, ["Polygon", "Circle"], 0);
     gridColor         = color("gridColor", "Grid Color", "#E2E8F0");
-    gridWidth         = num("gridWidth", "Grid Line Width", 0.5, 0.25, 2);
-    gridOpacity       = pct("gridOpacity", "Grid Opacity (%)", 50);
+    gridWidth         = num("gridWidth", "Grid Line Width", 0.5);
+    gridOpacity       = num("gridOpacity", "Grid Opacity (%)", 50);
     spokeColor        = color("spokeColor", "Spoke Color", "#E2E8F0");
-    spokeWidth        = num("spokeWidth", "Spoke Width", 0.5, 0.25, 2);
+    spokeWidth        = num("spokeWidth", "Spoke Width", 0.5);
     showGridLabels    = toggle("showGridLabels", "Show Grid Labels", true);
-    gridLabelFontSize = num("gridLabelFontSize", "Grid Label Font Size", 9, 7, 14);
+    gridLabelFontSize = num("gridLabelFontSize", "Grid Label Font Size", 9);
     gridLabelFontColor = color("gridLabelFontColor", "Grid Label Font Color", "#94A3B8");
 
     name: string = "gridSettings";
@@ -132,9 +122,9 @@ class GridSettingsCard extends FormattingSettingsCard {
 
 class AxisLabelSettingsCard extends FormattingSettingsCard {
     showAxisLabels = toggle("showAxisLabels", "Show Axis Labels", true);
-    axisFontSize   = num("axisFontSize", "Axis Font Size", 11, 8, 18);
+    axisFontSize   = num("axisFontSize", "Axis Font Size", 11);
     axisFontColor  = color("axisFontColor", "Axis Font Color", "#334155");
-    labelPadding   = num("labelPadding", "Label Padding", 12, 4, 30);
+    labelPadding   = num("labelPadding", "Label Padding", 12);
 
     name: string = "axisLabelSettings";
     displayName: string = "Axis Labels";
@@ -175,7 +165,7 @@ class ColorSettingsCard extends FormattingSettingsCard {
 class LegendSettingsCard extends FormattingSettingsCard {
     showLegend     = toggle("showLegend", "Show Legend", true);
     legendPosition = dropdown("legendPosition", "Position", LEGEND_POSITIONS, ["Top", "Bottom", "Right"], 0);
-    legendFontSize = num("legendFontSize", "Font Size", 10, 7, 16);
+    legendFontSize = num("legendFontSize", "Font Size", 10);
     legendFontColor = color("legendFontColor", "Font Color", "#475569");
 
     name: string = "legendSettings";

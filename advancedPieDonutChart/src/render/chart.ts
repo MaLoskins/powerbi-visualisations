@@ -141,7 +141,7 @@ export function renderArcs(
     }
 
     merged
-        .attr("stroke", "#fff")
+        .attr("stroke", cfg.chart.arcStrokeColor)
         .attr("stroke-width", 1)
         .style("cursor", "pointer");
 
@@ -231,7 +231,7 @@ export function renderOuterRing(
         .attr("class", "apie-outer-slice")
         .attr("d", (d: OuterArcDatum) => outerArcGen(d) || "")
         .attr("fill", (d: OuterArcDatum) => d.data.color)
-        .attr("stroke", "#fff")
+        .attr("stroke", cfg.chart.arcStrokeColor)
         .attr("stroke-width", 0.5)
         .style("cursor", "pointer")
         .on("click", function (this: SVGPathElement, event: MouseEvent, d: OuterArcDatum) {

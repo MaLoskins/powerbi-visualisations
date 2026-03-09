@@ -12,13 +12,9 @@ import FormattingSettingsModel = formattingSettings.Model;
 import {
     RenderConfig,
     ORIENTATIONS,
-    Orientation,
     VALUE_LABEL_POSITIONS,
-    ValueLabelPosition,
     VALUE_FORMATS,
-    ValueFormat,
     TARGET2_STYLES,
-    Target2Style,
 } from "./types";
 
 /* ═══════════════════════════════════════════════

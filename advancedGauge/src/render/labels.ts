@@ -10,6 +10,24 @@ import { CSS_PREFIX } from "../constants";
 import { formatValue, formatMinMax } from "../utils/format";
 
 /**
+ * Constrain an SVG text element to a maximum pixel width.
+ * Uses SVG's textLength attribute to compress glyphs; if the text is already
+ * narrower than maxWidth the element is left untouched.
+ */
+function truncateText(node: SVGTextElement, maxWidth: number): void {
+    if (maxWidth <= 0) return;
+    try {
+        const len = node.getComputedTextLength();
+        if (len > maxWidth) {
+            node.setAttribute("textLength", String(maxWidth));
+            node.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        }
+    } catch {
+        /* getComputedTextLength may throw if the element is not yet in the DOM */
+    }
+}
+
+/**
  * Determine the color for the value label based on which range the value falls in.
  * Returns the configured font color if no ranges, or the matching range color.
  */
@@ -65,6 +83,9 @@ export function renderLabels(
         const effectiveFontSize = Math.round(cfg.labels.valueFontSize * scaleFactor);
         const valueColor = resolveValueLabelColor(data, cfg);
 
+        /* Constrain value label width to inner diameter so it doesn't overflow */
+        const maxValueWidth = innerRadius * 1.8;
+
         d3svg.append("text")
             .attr("class", CSS_PREFIX + "value-label")
             .attr("x", cx)
@@ -75,13 +96,17 @@ export function renderLabels(
             .attr("font-size", effectiveFontSize + "px")
             .attr("font-weight", "600")
             .attr("letter-spacing", "-0.01em")
-            .text(formattedValue);
+            .text(formattedValue)
+            .each(function () { truncateText(this as SVGTextElement, maxValueWidth); });
     }
 
     /* ── Min / Max Labels (at arc endpoints) ── */
     if (cfg.labels.showMinMaxLabels) {
-        const labelOffset = 8;
+        /* Proportional offset: ~5% of outer radius, clamped to a sensible range */
+        const labelOffset = Math.max(4, Math.min(16, outerRadius * 0.05));
         const effectiveMinMaxSize = Math.round(cfg.labels.minMaxFontSize * scaleFactor);
+        /* Max width for min/max labels: roughly half the gauge width */
+        const maxMinMaxWidth = outerRadius * 0.7;
 
         // Min label (at start angle endpoint)
         const minSin = Math.sin(startAngleRad);
@@ -99,7 +124,8 @@ export function renderLabels(
             .attr("text-anchor", minAnchor)
             .attr("fill", cfg.labels.minMaxFontColor)
             .attr("font-size", effectiveMinMaxSize + "px")
-            .text(formatMinMax(data.minValue, locale));
+            .text(formatMinMax(data.minValue, locale))
+            .each(function () { truncateText(this as SVGTextElement, maxMinMaxWidth); });
 
         // Max label (at end angle endpoint)
         const maxSin = Math.sin(endAngleRad);
@@ -116,12 +142,16 @@ export function renderLabels(
             .attr("text-anchor", maxAnchor)
             .attr("fill", cfg.labels.minMaxFontColor)
             .attr("font-size", effectiveMinMaxSize + "px")
-            .text(formatMinMax(data.maxValue, locale));
+            .text(formatMinMax(data.maxValue, locale))
+            .each(function () { truncateText(this as SVGTextElement, maxMinMaxWidth); });
     }
 
     /* ── Title (above the gauge) ── */
     if (cfg.labels.showTitle && cfg.labels.titleText) {
         const effectiveTitleSize = Math.round(cfg.labels.titleFontSize * scaleFactor);
+        /* Constrain title to SVG viewport width minus some breathing room */
+        const svgWidth = parseFloat(svg.getAttribute("width") || "0");
+        const maxTitleWidth = Math.max(40, (svgWidth || outerRadius * 2) * 0.9);
 
         d3svg.append("text")
             .attr("class", CSS_PREFIX + "title")
@@ -132,6 +162,7 @@ export function renderLabels(
             .attr("fill", cfg.labels.titleFontColor)
             .attr("font-size", effectiveTitleSize + "px")
             .attr("font-weight", "600")
-            .text(cfg.labels.titleText);
+            .text(cfg.labels.titleText)
+            .each(function () { truncateText(this as SVGTextElement, maxTitleWidth); });
     }
 }

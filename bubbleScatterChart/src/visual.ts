@@ -456,6 +456,7 @@ export class Visual implements IVisual {
             cfg.label,
             cfg.axis,
             cfg.chart.minBubbleRadius,
+            dims,
         );
 
         /* ── Selection styling ── */

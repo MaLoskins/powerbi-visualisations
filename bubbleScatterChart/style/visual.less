@@ -99,18 +99,21 @@
 }
 
 .bscatter-play-btn {
-    width: 32px;
+    min-width: 52px;
     height: 28px;
+    padding: 0 10px;
     border: 1px solid @slate-300;
     border-radius: @border-radius-sm;
     background: #FFFFFF;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 500;
     line-height: 1;
     color: @slate-700;
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
     transition: background @transition-fast ease;
 
     &:hover {
@@ -136,7 +139,7 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    z-index: 5;
+    z-index: 100;
     padding: 4px 10px;
     font-size: 10px;
     font-family: inherit;

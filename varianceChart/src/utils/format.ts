@@ -5,6 +5,7 @@
 
 /** Format a number compactly (e.g. 1.2K, 3.4M) */
 export function formatCompact(value: number): string {
+    if (!isFinite(value)) return "N/A";
     const abs = Math.abs(value);
     const sign = value < 0 ? "-" : "";
     if (abs >= 1e9) return sign + (abs / 1e9).toFixed(1) + "B";
@@ -22,6 +23,7 @@ export function formatVariance(value: number): string {
 
 /** Format a percentage value (input as decimal 0-1 range or raw percent) */
 export function formatPercent(value: number, isDecimal: boolean = false): string {
+    if (!isFinite(value)) return "N/A";
     const pct = isDecimal ? value * 100 : value;
     const prefix = pct > 0 ? "+" : "";
     return prefix + pct.toFixed(1) + "%";
@@ -29,6 +31,6 @@ export function formatPercent(value: number, isDecimal: boolean = false): string
 
 /** Format a raw number with commas */
 export function formatNumber(value: number): string {
-    if (!isFinite(value)) return "—";
+    if (!isFinite(value)) return "N/A";
     return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }

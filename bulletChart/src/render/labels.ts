@@ -9,8 +9,7 @@
 import { BulletItem, RenderConfig } from "../types";
 import { formatValue } from "../utils/format";
 import { SVG_NS } from "../utils/dom";
-
-const FONT_FAMILY = '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", Helvetica, Arial, sans-serif';
+import { FONT_STACK as FONT_FAMILY } from "../constants";
 
 /* ═══════════════════════════════════════════════
    Horizontal Labels
@@ -36,18 +35,19 @@ export function renderLabelsHorizontal(
         /* ── Value label ── */
         if (showValueLabel) {
             const barEnd = scale(item.actual);
+            const labelPad = Math.max(3, Math.round(valueFontSize * 0.45));
             let x: number;
             let anchor: string;
 
             if (valueLabelPosition === "right") {
-                x = barEnd + 5;
+                x = barEnd + labelPad;
                 anchor = "start";
             } else if (valueLabelPosition === "left") {
-                x = -5;
+                x = -labelPad;
                 anchor = "end";
             } else {
                 // inside
-                x = Math.max(barEnd - 5, 5);
+                x = Math.max(barEnd - labelPad, labelPad);
                 anchor = "end";
             }
 
@@ -67,10 +67,11 @@ export function renderLabelsHorizontal(
         /* ── Target label ── */
         if (showTargetLabel && item.target !== null) {
             const tx = scale(item.target);
+            const targetLabelPad = Math.max(2, Math.round(valueFontSize * 0.2));
             const text = document.createElementNS(SVG_NS, "text");
             text.setAttribute("class", "bullet-target-label");
             text.setAttribute("x", String(tx));
-            text.setAttribute("y", String(i * (bulletHeight + bulletSpacing) - 2));
+            text.setAttribute("y", String(i * (bulletHeight + bulletSpacing) - targetLabelPad));
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("fill", cfg.target.targetColor);
             text.setAttribute("font-size", (valueFontSize - 1) + "px");
@@ -98,6 +99,8 @@ export function renderLabelsVertical(
     const scaleMax = globalMax > 0 ? globalMax : 1;
     const scale = (v: number) => chartHeight - (v / scaleMax) * chartHeight;
 
+    const labelPad = Math.max(3, Math.round(valueFontSize * 0.4));
+
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const xCenter = i * (bulletWidth + bulletSpacing) + bulletWidth / 2;
@@ -108,7 +111,7 @@ export function renderLabelsVertical(
             const text = document.createElementNS(SVG_NS, "text");
             text.setAttribute("class", "bullet-value-label");
             text.setAttribute("x", String(xCenter));
-            text.setAttribute("y", String(barTopY - 4));
+            text.setAttribute("y", String(barTopY - labelPad));
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("fill", valueFontColor);
             text.setAttribute("font-size", valueFontSize + "px");
@@ -123,7 +126,7 @@ export function renderLabelsVertical(
             const ty = scale(item.target);
             const text = document.createElementNS(SVG_NS, "text");
             text.setAttribute("class", "bullet-target-label");
-            text.setAttribute("x", String(i * (bulletWidth + bulletSpacing) + bulletWidth + 3));
+            text.setAttribute("x", String(i * (bulletWidth + bulletSpacing) + bulletWidth + labelPad));
             text.setAttribute("y", String(ty + valueFontSize * 0.35));
             text.setAttribute("text-anchor", "start");
             text.setAttribute("fill", cfg.target.targetColor);

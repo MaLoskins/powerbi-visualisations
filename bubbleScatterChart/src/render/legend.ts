@@ -54,6 +54,10 @@ export function renderLegend(
             : colorCfg.defaultBubbleColor;
 
         const label = el("span", "bscatter-legend-label", entry);
+        label.style.overflow = "hidden";
+        label.style.textOverflow = "ellipsis";
+        label.style.whiteSpace = "nowrap";
+        label.style.maxWidth = "120px";
 
         item.appendChild(swatch);
         item.appendChild(label);

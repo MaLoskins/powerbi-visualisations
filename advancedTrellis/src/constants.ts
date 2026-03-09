@@ -158,5 +158,11 @@ export const X_TICK_LABEL_OFFSET = 12;
 /** Maximum characters for X-axis category labels before truncation */
 export const X_LABEL_MAX_CHARS = 10;
 
-/** Maximum number of panels pre-allocated in the panel pool */
-export const MAX_PANELS = 200;
+/** Extra bottom margin (px) when X-axis labels are rotated 90 degrees */
+export const X_LABEL_ROTATE_90_MARGIN = 16;
+
+/** Extra bottom margin (px) when X-axis labels are rotated 45 degrees */
+export const X_LABEL_ROTATE_45_MARGIN = 10;
+
+/** Initial number of panels pre-allocated in the panel pool */
+export const MAX_PANELS = 50;

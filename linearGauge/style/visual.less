@@ -15,8 +15,8 @@
 
 .lgauge-error {
     .theme-error-overlay();
-    font-size: 12px;
-    padding: 16px;
+    font-size: clamp(10px, 1.5vw, 14px);
+    padding: clamp(8px, 2vw, 20px);
 }
 
 /* ── Category Labels Column ── */
@@ -24,7 +24,8 @@
 .lgauge-categories {
     flex-shrink: 0;
     overflow: hidden;
-    padding-right: 8px;
+    overflow-y: auto;
+    padding-right: clamp(2px, 0.8vw, 10px);
 }
 
 .lgauge-category-label {
@@ -32,7 +33,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: right;
-    padding-right: 4px;
+    padding-right: clamp(2px, 0.5vw, 6px);
 }
 
 /* ── SVG Wrapper ── */
@@ -77,4 +78,6 @@
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

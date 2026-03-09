@@ -9,7 +9,7 @@ import { arc as d3Arc, PieArcDatum } from "d3-shape";
 
 import { PieSlice, RenderConfig } from "../types";
 import { ChartGeometry, getPieData } from "./chart";
-import { LABEL_GAP_FACTOR, LEADER_LINE_EXTEND, LEADER_LINE_HORIZONTAL } from "../constants";
+import { LABEL_GAP_FACTOR, MIN_CENTRE_LABEL_RADIUS, scaledLeaderLineExtend, scaledLeaderLineHorizontal } from "../constants";
 import { buildLabelText, formatNumber, formatAbbreviated } from "../utils/format";
 
 /* ═══════════════════════════════════════════════
@@ -33,6 +33,7 @@ export function renderLabels(
     slices: PieSlice[],
     geom: ChartGeometry,
     cfg: RenderConfig,
+    svgWidth?: number,
 ): void {
     const g = svg.select<SVGGElement>(".apie-labels-group");
     g.selectAll("*").remove();
@@ -50,14 +51,14 @@ export function renderLabels(
     if (labelPos === "inside") {
         renderInsideLabels(g, visiblePie, geom, cfg);
     } else if (labelPos === "outside") {
-        renderOutsideLabels(g, visiblePie, geom, cfg, fontSize);
+        renderOutsideLabels(g, visiblePie, geom, cfg, fontSize, svgWidth);
     } else {
         /* "auto": use inside if slice angle is large enough, outside otherwise */
         const largeThreshold = Math.PI / 4; /* ~45° */
         const inside = visiblePie.filter((d) => d.endAngle - d.startAngle >= largeThreshold);
         const outside = visiblePie.filter((d) => d.endAngle - d.startAngle < largeThreshold);
         renderInsideLabels(g, inside, geom, cfg);
-        renderOutsideLabels(g, outside, geom, cfg, fontSize);
+        renderOutsideLabels(g, outside, geom, cfg, fontSize, svgWidth);
     }
 }
 
@@ -102,10 +103,21 @@ function renderOutsideLabels(
     geom: ChartGeometry,
     cfg: RenderConfig,
     fontSize: number,
+    svgWidth?: number,
 ): void {
     if (pieData.length === 0) return;
 
-    const labelRadius = geom.outerRadius + LEADER_LINE_EXTEND;
+    /* Use scaled leader-line dimensions based on chart radius */
+    const leaderExtend = scaledLeaderLineExtend(geom.outerRadius);
+    const leaderHorizontal = scaledLeaderLineHorizontal(geom.outerRadius);
+
+    const labelRadius = geom.outerRadius + leaderExtend;
+
+    /* Compute max label width to prevent viewport overflow */
+    const halfSvg = svgWidth ? svgWidth / 2 : Infinity;
+    const maxLabelWidth = halfSvg > 0
+        ? Math.max(30, halfSvg - labelRadius - leaderHorizontal - 4)
+        : Infinity;
 
     /* ── Step 1: Compute initial label positions ── */
     const labels: LabelDatum[] = pieData.map((pd) => {
@@ -125,8 +137,8 @@ function renderOutsideLabels(
             ),
             midAngle,
             x: isRight
-                ? labelRadius + LEADER_LINE_HORIZONTAL
-                : -(labelRadius + LEADER_LINE_HORIZONTAL),
+                ? labelRadius + leaderHorizontal
+                : -(labelRadius + leaderHorizontal),
             y,
             anchorX,
             anchorY,
@@ -137,7 +149,7 @@ function renderOutsideLabels(
 
     /* ── Step 2: Collision avoidance – sweep sort and adjust ── */
     const minGap = fontSize * LABEL_GAP_FACTOR;
-    const maxY = geom.outerRadius + LEADER_LINE_EXTEND + fontSize;
+    const maxY = geom.outerRadius + leaderExtend + fontSize;
 
     /* Split into left and right sides */
     const rightLabels = labels.filter((l) => l.isRight).sort((a, b) => a.y - b.y);
@@ -151,11 +163,11 @@ function renderOutsideLabels(
         const allLabels = [...rightLabels, ...leftLabels];
         for (const lbl of allLabels) {
             /* Two-segment polyline: from arc outer midpoint → elbow → label */
-            const elbowX = Math.sin(lbl.midAngle) * (geom.outerRadius + LEADER_LINE_EXTEND);
-            const elbowY = -Math.cos(lbl.midAngle) * (geom.outerRadius + LEADER_LINE_EXTEND);
+            const elbowX = Math.sin(lbl.midAngle) * (geom.outerRadius + leaderExtend);
+            const elbowY = -Math.cos(lbl.midAngle) * (geom.outerRadius + leaderExtend);
             const endX = lbl.isRight
-                ? labelRadius + LEADER_LINE_HORIZONTAL - 4
-                : -(labelRadius + LEADER_LINE_HORIZONTAL - 4);
+                ? labelRadius + leaderHorizontal - 4
+                : -(labelRadius + leaderHorizontal - 4);
 
             g.append("polyline")
                 .attr("class", "apie-leader-line")
@@ -170,10 +182,10 @@ function renderOutsideLabels(
         }
     }
 
-    /* ── Step 4: Draw label text ── */
+    /* ── Step 4: Draw label text (with truncation to prevent overflow) ── */
     const allLabels = [...rightLabels, ...leftLabels];
     for (const lbl of allLabels) {
-        g.append("text")
+        const textEl = g.append("text")
             .attr("class", "apie-label-outside")
             .attr("x", lbl.x)
             .attr("y", lbl.y)
@@ -183,7 +195,44 @@ function renderOutsideLabels(
             .attr("fill", cfg.label.labelFontColor)
             .attr("pointer-events", "none")
             .text(lbl.text);
+
+        /* Truncate labels that would overflow the viewport */
+        if (maxLabelWidth < Infinity) {
+            truncateSvgText(textEl, lbl.text, maxLabelWidth);
+        }
     }
+}
+
+/** Truncate an SVG text element to fit within maxWidth, appending ellipsis */
+function truncateSvgText(
+    textEl: Selection<SVGTextElement, unknown, null, undefined>,
+    fullText: string,
+    maxWidth: number,
+): void {
+    const node = textEl.node();
+    if (!node) return;
+
+    /* Check if the full text already fits */
+    let textWidth = node.getComputedTextLength();
+    if (textWidth <= maxWidth) return;
+
+    /* Binary search for the longest substring that fits with ellipsis */
+    let lo = 0;
+    let hi = fullText.length;
+    const ellipsis = "\u2026"; /* … */
+
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        node.textContent = fullText.substring(0, mid) + ellipsis;
+        textWidth = node.getComputedTextLength();
+        if (textWidth <= maxWidth) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+
+    node.textContent = lo > 0 ? fullText.substring(0, lo) + ellipsis : ellipsis;
 }
 
 /** Sweep-sort collision resolution for a list of labels sorted by y (L7) */
@@ -247,7 +296,7 @@ export function renderCentreLabel(
 
     if (!cfg.centreLabel.showCentreLabel) return;
     if (cfg.chart.chartType === "pie") return; /* no hole in pie */
-    if (geom.innerRadius < 20) return; /* too small */
+    if (geom.innerRadius < MIN_CENTRE_LABEL_RADIUS) return; /* too small */
 
     /* Determine main text */
     let mainText = "";

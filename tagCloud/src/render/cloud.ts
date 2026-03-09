@@ -10,6 +10,7 @@ import { PlacedWord, RenderConfig, CloudCallbacks } from "../types";
 /**
  * Render placed words into the SVG element.
  * Clears existing content and draws fresh.
+ * Words are wrapped in a centred group with clipping to prevent overflow.
  */
 export function renderCloud(
     svg: SVGSVGElement,
@@ -18,12 +19,56 @@ export function renderCloud(
     callbacks: CloudCallbacks,
 ): void {
     const d3svg = select(svg);
+    const svgWidth = parseFloat(svg.getAttribute("width") || "0");
+    const svgHeight = parseFloat(svg.getAttribute("height") || "0");
 
     /* Clear previous render */
     d3svg.selectAll("*").remove();
 
-    /* Create word groups */
-    const groups = d3svg
+    /* Add a clipPath so text does not overflow the viewport */
+    const defs = d3svg.append("defs");
+    defs.append("clipPath")
+        .attr("id", "tcloud-clip")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
+
+    /* Compute bounding box of placed words and centre the group */
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const w of words) {
+        const halfW = w.width / 2;
+        const halfH = w.height / 2;
+        if (w.x - halfW < minX) minX = w.x - halfW;
+        if (w.y - halfH < minY) minY = w.y - halfH;
+        if (w.x + halfW > maxX) maxX = w.x + halfW;
+        if (w.y + halfH > maxY) maxY = w.y + halfH;
+    }
+    const cloudW = maxX - minX;
+    const cloudH = maxY - minY;
+    const cloudCx = minX + cloudW / 2;
+    const cloudCy = minY + cloudH / 2;
+
+    /* Scale cloud to fill viewport with a small responsive margin */
+    const margin = Math.min(svgWidth, svgHeight) * 0.02;
+    const availW = svgWidth - margin * 2;
+    const availH = svgHeight - margin * 2;
+    const scale = (cloudW > 0 && cloudH > 0)
+        ? Math.min(availW / cloudW, availH / cloudH, 1.5)
+        : 1;
+
+    const offsetX = svgWidth / 2 - cloudCx * scale;
+    const offsetY = svgHeight / 2 - cloudCy * scale;
+
+    /* Wrapper group: clipped + centred + scaled */
+    const g = d3svg.append("g")
+        .attr("clip-path", "url(#tcloud-clip)")
+        .append("g")
+        .attr("transform", `translate(${offsetX},${offsetY}) scale(${scale})`);
+
+    /* Create word elements */
+    const groups = g
         .selectAll<SVGTextElement, PlacedWord>("text")
         .data(words)
         .enter()

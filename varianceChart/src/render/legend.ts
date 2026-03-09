@@ -8,6 +8,14 @@ import { RenderConfig } from "../types";
 
 type SVGSel = Selection<SVGGElement, unknown, null, undefined>;
 
+/** Truncate legend label text to fit available width */
+function truncateLegendLabel(text: string, maxWidthPx: number, fontSize: number): string {
+    const approxChars = Math.floor(maxWidthPx / (fontSize * 0.6));
+    if (approxChars <= 0) return "";
+    if (text.length <= approxChars) return text;
+    return text.slice(0, Math.max(2, approxChars - 2)) + "...";
+}
+
 /** Render the legend with Actual, Budget, Favourable, Unfavourable entries */
 export function renderLegend(
     g: SVGSel,
@@ -30,16 +38,30 @@ export function renderLegend(
 
     const fontSize = cfg.legend.legendFontSize;
     const swatchSize = fontSize;
-    const spacing = 16;
-    let x = 0;
+    const spacing = Math.max(8, fontSize * 1.2);
+    const swatchGap = Math.max(3, fontSize * 0.4);
+
+    /* Calculate max label width per entry when total exceeds available space */
+    const fixedPerEntry = swatchSize + swatchGap + spacing;
+    const totalFixed = fixedPerEntry * entries.length;
+    const availableForLabels = totalWidth - totalFixed;
+    const maxLabelWidth = Math.max(fontSize * 2, availableForLabels / entries.length);
 
     /* Approximate total width for centering */
-    const totalLegendWidth = entries.reduce((acc, e) => {
-        return acc + swatchSize + 4 + e.label.length * fontSize * 0.6 + spacing;
-    }, 0);
-    x = Math.max(0, (totalWidth - totalLegendWidth) / 2);
-
+    let totalLegendWidth = 0;
+    const truncatedLabels: string[] = [];
     for (const entry of entries) {
+        const truncated = truncateLegendLabel(entry.label, maxLabelWidth, fontSize);
+        truncatedLabels.push(truncated);
+        totalLegendWidth += swatchSize + swatchGap + truncated.length * fontSize * 0.6 + spacing;
+    }
+
+    let x = Math.max(0, (totalWidth - totalLegendWidth) / 2);
+
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        const displayLabel = truncatedLabels[i];
+
         /* Swatch */
         g.append("rect")
             .attr("class", "variance-legend-swatch")
@@ -50,7 +72,7 @@ export function renderLegend(
             .attr("rx", 2)
             .attr("fill", entry.color);
 
-        x += swatchSize + 4;
+        x += swatchSize + swatchGap;
 
         /* Label */
         g.append("text")
@@ -60,8 +82,8 @@ export function renderLegend(
             .attr("dy", "0.35em")
             .attr("font-size", fontSize + "px")
             .attr("fill", cfg.legend.legendFontColor)
-            .text(entry.label);
+            .text(displayLabel);
 
-        x += entry.label.length * fontSize * 0.6 + spacing;
+        x += displayLabel.length * fontSize * 0.6 + spacing;
     }
 }

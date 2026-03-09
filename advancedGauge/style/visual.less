@@ -91,6 +91,8 @@
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .agauge-min-label,
@@ -98,12 +100,16 @@
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .agauge-title {
     pointer-events: none;
     user-select: none;
     font-family: @font-stack;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Error Overlay ── */
@@ -142,8 +148,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px;
-    gap: 12px;
+    padding: 5%;
+    gap: clamp(6px, 3%, 16px);
     background: #FFFFFF;
     z-index: 10;
 }

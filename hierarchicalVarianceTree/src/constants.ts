@@ -165,4 +165,4 @@ export const ROOT_LABEL = "Total";
 
 /* ── Hierarchy separator for node IDs ── */
 
-export const HIERARCHY_SEP = "›";
+export const HIERARCHY_SEP = "|";

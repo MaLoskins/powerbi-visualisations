@@ -39,7 +39,7 @@ import {
     resizeSVG,
 } from "./render/chart";
 import { renderBubbleLabels, renderGroupLabels } from "./render/labels";
-import { renderLegend, LegendDimensions } from "./render/legend";
+import { renderLegend } from "./render/legend";
 import {
     handleBubbleClick,
     handleBackgroundClick,
@@ -103,7 +103,11 @@ export class Visual implements IVisual {
         /* SVG */
         this.svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svgEl.classList.add(`${CSS_PREFIX}-svg`);
-        this.svgEl.style.flex = "1";
+        this.svgEl.style.flex = "1 1 0";
+        this.svgEl.style.minHeight = "0";
+        this.svgEl.style.minWidth = "0";
+        this.svgEl.style.width = "100%";
+        this.svgEl.style.height = "100%";
         this.container.appendChild(this.svgEl);
 
         this.svg = scaffoldSVG(this.svgEl, 0, 0);
@@ -190,22 +194,13 @@ export class Visual implements IVisual {
 
         /* ── Legend ── */
         this.positionLegend(cfg);
-        const legendDims = renderLegend(this.legendContainer, pr.groups, cfg);
+        renderLegend(this.legendContainer, pr.groups, cfg);
 
-        /* ── Compute available chart area ── */
-        const containerRect = this.container.getBoundingClientRect();
-        let chartWidth = containerRect.width;
-        let chartHeight = containerRect.height;
-
-        if (cfg.legend.showLegend && pr.groups.length > 0) {
-            if (cfg.legend.position === "right") {
-                chartWidth -= legendDims.size;
-            } else {
-                chartHeight -= legendDims.size;
-            }
-        }
-        chartWidth = Math.max(chartWidth, 50);
-        chartHeight = Math.max(chartHeight, 50);
+        /* ── Compute available chart area from the SVG element's actual size
+         *  (flex layout already accounts for legend space) ── */
+        const svgRect = this.svgEl.getBoundingClientRect();
+        const chartWidth = Math.max(svgRect.width, 50);
+        const chartHeight = Math.max(svgRect.height, 50);
 
         /* ── Compute radii ── */
         computeRadii(pr.nodes, pr.minValue, pr.maxValue, cfg.bubble.minRadius, cfg.bubble.maxRadius);

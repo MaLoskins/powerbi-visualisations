@@ -19,6 +19,8 @@ import {
     AXIS_TICK_SIZE,
     AXIS_TICK_LABEL_OFFSET,
     AXIS_LABEL_Y_OFFSET,
+    AXIS_X_TICK_SPACING,
+    AXIS_Y_TICK_SPACING,
 } from "../constants";
 import { formatNumber } from "../utils/format";
 
@@ -122,8 +124,8 @@ export function renderAxes(
 ): void {
     axisGroup.selectAll("*").remove();
 
-    const tickCountX = Math.max(3, Math.floor(dims.plotWidth / 80));
-    const tickCountY = Math.max(3, Math.floor(dims.plotHeight / 60));
+    const tickCountX = Math.max(3, Math.floor(dims.plotWidth / AXIS_X_TICK_SPACING));
+    const tickCountY = Math.max(3, Math.floor(dims.plotHeight / AXIS_Y_TICK_SPACING));
 
     const xTicks = xScale.ticks(tickCountX);
     const yTicks = yScale.ticks(tickCountY);

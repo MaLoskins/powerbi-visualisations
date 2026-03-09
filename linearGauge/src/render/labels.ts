@@ -11,6 +11,42 @@ import { formatValue } from "../utils/format";
 import { LABEL_PADDING_H, MIN_MAX_LABEL_PADDING } from "../constants";
 
 /**
+ * Apply text overflow clipping to an SVG text element.
+ * Sets textLength and lengthAdjust so text compresses or is truncated
+ * when it would exceed maxWidth.
+ */
+function applySvgTextOverflow(
+    textEl: d3.Selection<SVGTextElement, unknown, null, undefined>,
+    maxWidth: number,
+): void {
+    if (maxWidth <= 0) return;
+    textEl
+        .attr("textLength", maxWidth)
+        .attr("lengthAdjust", "spacing")
+        .each(function (this: SVGTextElement) {
+            const node = this;
+            // After paint, check if actual length exceeds max and truncate
+            requestAnimationFrame(() => {
+                const actual = node.getComputedTextLength?.();
+                if (actual && actual > maxWidth * 1.05) {
+                    const text = node.textContent ?? "";
+                    // Binary search for fitting length
+                    let lo = 0, hi = text.length;
+                    while (lo < hi) {
+                        const mid = (lo + hi + 1) >> 1;
+                        node.textContent = text.slice(0, mid) + "\u2026";
+                        if (node.getComputedTextLength() <= maxWidth) lo = mid;
+                        else hi = mid - 1;
+                    }
+                    node.textContent = lo < text.length ? text.slice(0, lo) + "\u2026" : text;
+                    node.removeAttribute("textLength");
+                    node.removeAttribute("lengthAdjust");
+                }
+            });
+        });
+}
+
+/**
  * Render value labels onto the gauge SVG for horizontal layout.
  * Called after gauge bars are drawn.
  */
@@ -61,12 +97,12 @@ export function renderValueLabels(
                 break;
             case "above":
                 x = barW / 2;
-                y = yOffset - 3;
+                y = yOffset - Math.max(2, Math.round(cfg.label.valueFontSize * 0.25));
                 anchor = "middle";
                 break;
         }
 
-        svg.append("text")
+        const textEl = svg.append("text")
             .attr("class", "lgauge-value-label")
             .attr("x", x)
             .attr("y", y)
@@ -74,7 +110,14 @@ export function renderValueLabels(
             .attr("text-anchor", anchor)
             .attr("font-size", cfg.label.valueFontSize + "px")
             .attr("fill", cfg.label.valueFontColor)
-            .text(text);
+            .text(text) as unknown as d3.Selection<SVGTextElement, unknown, null, undefined>;
+
+        // Clip inside-bar labels to bar width; clip right labels to remaining space
+        if (pos === "inside") {
+            applySvgTextOverflow(textEl, Math.max(0, barW - LABEL_PADDING_H * 2));
+        } else if (pos === "right") {
+            applySvgTextOverflow(textEl, Math.max(0, barAreaWidth - barW - LABEL_PADDING_H));
+        }
     });
 }
 
@@ -104,7 +147,7 @@ export function renderVerticalValueLabels(
         const text = formatValue(item.value, fmt);
         const barTopY = barAreaHeight - barH;
 
-        let x = xOffset + gaugeW / 2;
+        const x = xOffset + gaugeW / 2;
         let y = barTopY - LABEL_PADDING_H;
         const anchor = "middle";
 
@@ -153,7 +196,7 @@ export function renderTargetLabels(
             svg.append("text")
                 .attr("class", "lgauge-target-label")
                 .attr("x", tx)
-                .attr("y", yOffset - 3)
+                .attr("y", yOffset - Math.max(2, Math.round(cfg.label.valueFontSize * 0.25)))
                 .attr("text-anchor", "middle")
                 .attr("font-size", (cfg.label.valueFontSize - 1) + "px")
                 .attr("fill", cfg.target.targetColor)
@@ -165,7 +208,7 @@ export function renderTargetLabels(
             svg.append("text")
                 .attr("class", "lgauge-target-label")
                 .attr("x", tx)
-                .attr("y", yOffset - 3)
+                .attr("y", yOffset - Math.max(2, Math.round(cfg.label.valueFontSize * 0.25)))
                 .attr("text-anchor", "middle")
                 .attr("font-size", (cfg.label.valueFontSize - 1) + "px")
                 .attr("fill", cfg.target.target2Color)
@@ -262,16 +305,21 @@ export function renderVerticalCategoryLabels(
     const gaugeW = cfg.layout.gaugeHeight;
     const spacing = cfg.layout.gaugeSpacing;
 
+    const maxLabelW = gaugeW + spacing * 0.8;
+
     items.forEach((item, i) => {
         const xOffset = i * (gaugeW + spacing) + gaugeW / 2;
+        const catPad = Math.max(2, Math.round(cfg.layout.categoryFontSize * 0.35));
 
-        svg.append("text")
+        const textEl = svg.append("text")
             .attr("class", "lgauge-category-label-v")
             .attr("x", xOffset)
-            .attr("y", barAreaHeight + cfg.layout.categoryFontSize + 4)
+            .attr("y", barAreaHeight + cfg.layout.categoryFontSize + catPad)
             .attr("text-anchor", "middle")
             .attr("font-size", cfg.layout.categoryFontSize + "px")
             .attr("fill", cfg.layout.categoryFontColor)
-            .text(item.category);
+            .text(item.category) as unknown as d3.Selection<SVGTextElement, unknown, null, undefined>;
+
+        applySvgTextOverflow(textEl, maxLabelW);
     });
 }

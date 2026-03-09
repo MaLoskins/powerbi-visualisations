@@ -142,6 +142,12 @@ export const DASH_ARRAYS: Record<string, string> = {
 
 /* ── Axis Rendering ── */
 
+/** Target spacing between X-axis ticks (px) */
+export const AXIS_X_TICK_SPACING = 80;
+
+/** Target spacing between Y-axis ticks (px) */
+export const AXIS_Y_TICK_SPACING = 60;
+
 /** Length of axis tick marks (px) */
 export const AXIS_TICK_SIZE = 6;
 

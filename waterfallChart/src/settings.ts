@@ -10,12 +10,12 @@
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import {
     RenderConfig,
-    Orientation, ORIENTATIONS,
-    ConnectorLineStyle, CONNECTOR_LINE_STYLES,
-    LabelPosition, LABEL_POSITIONS,
-    ValueFormat, VALUE_FORMATS,
-    LegendPosition, LEGEND_POSITIONS,
-    XLabelRotation, X_LABEL_ROTATIONS,
+    ORIENTATIONS,
+    CONNECTOR_LINE_STYLES,
+    LABEL_POSITIONS,
+    VALUE_FORMATS,
+    LEGEND_POSITIONS,
+    X_LABEL_ROTATIONS,
 } from "./types";
 
 import FormattingSettingsCard = formattingSettings.SimpleCard;
@@ -30,8 +30,8 @@ function num(
     name: string,
     displayName: string,
     value: number,
-    minVal?: number,
-    maxVal?: number,
+    _minVal?: number,
+    _maxVal?: number,
 ): formattingSettings.NumUpDown {
     const opts: { name: string; displayName: string; value: number } = {
         name,

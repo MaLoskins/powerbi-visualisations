@@ -106,15 +106,13 @@ export const FONT_STACK = '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", H
 
 /* ── [SHARED THEME END] ─────────────────────── */
 
-/* ── Backward-compatible alias ── */
-
-/** @deprecated Use UNSELECTED_OPACITY instead */
-export const DIM_OPACITY = UNSELECTED_OPACITY;
-
 /* ── Layout Defaults & Limits ── */
 
 /** Axis height (horizontal) or width (vertical) reserved for tick labels */
 export const AXIS_AREA_SIZE = 28;
+
+/** Standard padding between chart elements and viewport edges */
+export const CHART_PADDING = 8;
 
 /** Minimum axis tick spacing in pixels */
 export const MIN_TICK_SPACING = 50;

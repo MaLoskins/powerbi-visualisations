@@ -39,7 +39,7 @@ export function computePxPerDay(
 ): number {
     if (zoom === "fit") {
         const totalDays = Math.max(1, daysBetween(timeMin, timeMax));
-        const available = Math.max(20, availableWidth - 20);
+        const available = Math.max(20, availableWidth - 2);
         return Math.max(0.1, available / totalDays);
     }
     return ZOOM_PX_PER_DAY[zoom] ?? 5;

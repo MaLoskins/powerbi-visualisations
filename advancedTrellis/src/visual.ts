@@ -213,6 +213,9 @@ export class Visual implements IVisual {
         /* ── Build callbacks ── */
         const callbacks = this.buildCallbacks();
 
+        /* ── Expand panel pool if needed ── */
+        this.ensurePoolSize(data.panels.length);
+
         /* ── Update panel pool ── */
         for (let i = 0; i < this.panelPool.length; i++) {
             const pool = this.panelPool[i];
@@ -249,6 +252,25 @@ export class Visual implements IVisual {
 
         /* ── Apply selection styles ── */
         applySelectionStyles(this.gridContainer, this.selectionManager);
+    }
+
+    /* ═══════════════════════════════════════════════
+       Panel Pool Management
+       ═══════════════════════════════════════════════ */
+
+    /** Grow the panel pool dynamically when more panels are needed. */
+    private ensurePoolSize(requiredCount: number): void {
+        while (this.panelPool.length < requiredCount) {
+            const div = el("div", "trellis-panel", this.gridContainer);
+            div.style.display = "none";
+
+            const titleDiv = el("div", "trellis-panel-title", div);
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "trellis-panel-svg");
+            div.appendChild(svg);
+
+            this.panelPool.push({ div, titleDiv, svg });
+        }
     }
 
     /* ═══════════════════════════════════════════════

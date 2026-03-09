@@ -128,12 +128,12 @@ export const KEY_SEPARATOR = "||";
 
 export const CSS_PREFIX = "hfslicer-";
 
-/* ── Icon characters ── */
+/* ── Icon characters (plain Unicode, no emoji) ── */
 
-export const ICON_FOLDER_OPEN = "\u{1F4C2}";
-export const ICON_FOLDER_CLOSED = "\u{1F4C1}";
-export const ICON_LEAF = "\u{1F4C4}";
-export const ICON_EXPAND = "\u25B8";
-export const ICON_COLLAPSE = "\u25BE";
-export const ICON_CHECK = "\u2713";
-export const ICON_INDETERMINATE = "\u2013";
+export const ICON_FOLDER_OPEN = "\u25E2";    // ◢ small triangle
+export const ICON_FOLDER_CLOSED = "\u25B7";  // ▷ right triangle
+export const ICON_LEAF = "\u2022";           // • bullet
+export const ICON_EXPAND = "\u25B8";         // ▸ right pointer
+export const ICON_COLLAPSE = "\u25BE";       // ▾ down pointer
+export const ICON_CHECK = "\u2713";          // ✓ check mark
+export const ICON_INDETERMINATE = "\u2013";  // – en dash

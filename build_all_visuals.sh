@@ -68,8 +68,8 @@ for dir in "${VISUAL_DIRS[@]}"; do
   echo "[${dir}] npm install"
   npm install
 
-  echo "[${dir}] pbiviz package"
-  pbiviz package
+  echo "[${dir}] pbiviz package --verbose"
+  pbiviz package --verbose
 
   popd >/dev/null
 

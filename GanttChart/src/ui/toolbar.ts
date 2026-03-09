@@ -45,11 +45,11 @@ export class Toolbar {
 
         /* Expand/Collapse group */
         this.expandGroup = el("div", "gantt-toolbar-group gantt-toolbar-expand");
-        const expandBtn = el("button", "gantt-tool-btn", "▾ Expand All");
+        const expandBtn = el("button", "gantt-tool-btn", "Expand All");
         expandBtn.title = "Expand all groups";
         expandBtn.addEventListener("click", () => cbs.onExpandAll());
         this.expandGroup.appendChild(expandBtn);
-        const collapseBtn = el("button", "gantt-tool-btn", "▸ Collapse");
+        const collapseBtn = el("button", "gantt-tool-btn", "Collapse");
         collapseBtn.title = "Collapse all groups";
         collapseBtn.addEventListener("click", () => cbs.onCollapseAll());
         this.expandGroup.appendChild(collapseBtn);
@@ -59,7 +59,7 @@ export class Toolbar {
 
         /* Today button */
         this.todayGroup = el("div", "gantt-toolbar-group gantt-toolbar-today");
-        const todayBtn = el("button", "gantt-tool-btn", "⊙ Today");
+        const todayBtn = el("button", "gantt-tool-btn", "Today");
         todayBtn.title = "Scroll to today";
         todayBtn.addEventListener("click", () => cbs.onScrollToToday());
         this.todayGroup.appendChild(todayBtn);

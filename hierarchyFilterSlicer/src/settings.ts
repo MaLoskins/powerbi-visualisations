@@ -73,7 +73,7 @@ function dropdown(
     items: readonly string[],
     defaultIdx: number,
 ): formattingSettings.ItemDropdown {
-    const dropdownItems = items.map((item, i) => ({ value: item, displayName: item }));
+    const dropdownItems = items.map((item) => ({ value: item, displayName: item }));
     return new formattingSettings.ItemDropdown({
         name,
         displayName,

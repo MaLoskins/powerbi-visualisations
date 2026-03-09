@@ -109,11 +109,28 @@ export const FONT_STACK = '"Segoe UI", "wf_segoe-ui_normal", "Helvetica Neue", H
    Module-specific constants
    ═══════════════════════════════════════════════ */
 
-export const CHART_MARGINS = {
-    top: 20,
-    right: 20,
-    bottom: 60,
-    left: 60,
+/** Base chart margin fractions (of viewport dimension). */
+export const CHART_MARGIN_FRACTIONS = {
+    top: 0.03,
+    right: 0.03,
+    bottom: 0.10,
+    left: 0.10,
+} as const;
+
+/** Minimum chart margins in pixels (floor). */
+export const CHART_MARGIN_MIN = {
+    top: 8,
+    right: 8,
+    bottom: 20,
+    left: 20,
+} as const;
+
+/** Maximum chart margins in pixels (cap). */
+export const CHART_MARGIN_MAX = {
+    top: 40,
+    right: 40,
+    bottom: 80,
+    left: 80,
 } as const;
 
 /** Minimum bar height in pixels before label switches to "above" in auto mode */
@@ -121,8 +138,21 @@ export const MIN_BAR_HEIGHT_FOR_INSIDE_LABEL = 24;
 
 /** Legend swatch dimensions */
 export const LEGEND_SWATCH_SIZE = 12;
-export const LEGEND_ITEM_GAP = 20;
-export const LEGEND_HEIGHT = 30;
+export const LEGEND_ITEM_GAP = 16;
+/** Legend height as a fraction of viewport height */
+export const LEGEND_HEIGHT_FRACTION = 0.05;
+/** Minimum legend height in pixels */
+export const LEGEND_HEIGHT_MIN = 22;
+/** Maximum legend height in pixels */
+export const LEGEND_HEIGHT_MAX = 40;
+/** Maximum width of a single legend label in pixels */
+export const LEGEND_LABEL_MAX_WIDTH = 120;
+
+/** Maximum number of characters for axis category labels before truncation */
+export const MAX_AXIS_LABEL_CHARS = 18;
+
+/** Maximum fraction of the axis dimension that a single rotated x-axis label may occupy */
+export const X_AXIS_LABEL_MAX_WIDTH_FRACTION = 0.25;
 
 /** CSS class prefix for this visual */
 export const CSS_PREFIX = "waterfall-";

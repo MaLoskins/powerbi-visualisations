@@ -15,6 +15,7 @@
 /* ── SVG Root ── */
 .marimekko-svg {
     display: block;
+    overflow: hidden;   /* Clip axis labels that extend beyond the SVG viewport */
 }
 
 /* ── Error Overlay ── */
@@ -37,35 +38,51 @@
 .marimekko-segment-label {
     pointer-events: none;
     user-select: none;
+    /* Labels are clipped to segment bounds via SVG clipPath in render/labels.ts */
 }
 
 /* ── Axis Elements ── */
 .marimekko-y-tick {
     user-select: none;
+    pointer-events: none;
 }
 
 .marimekko-x-label {
     user-select: none;
+    pointer-events: none;
 }
 
 .marimekko-width-label {
     user-select: none;
+    pointer-events: none;
 }
 
 .marimekko-gridline {
     pointer-events: none;
 }
 
+/* ── Chart group — overflow is handled by SVG root clip ── */
+.marimekko-chart-g {
+    /* Intentionally no clip here; the SVG root handles boundary clipping */
+}
+
 /* ── Legend ── */
 .marimekko-legend {
     user-select: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    .theme-scrollbar(6px);
 }
 
 .marimekko-legend-item {
     cursor: default;
+    flex-shrink: 0;     /* Prevent legend items from being squished */
+    min-width: 0;       /* Allow flex child truncation */
 }
 
 .marimekko-legend-label {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;       /* Enable text-overflow in flex context */
 }

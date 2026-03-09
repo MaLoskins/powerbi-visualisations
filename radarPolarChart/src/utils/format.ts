@@ -26,13 +26,3 @@ export function formatTooltipValue(value: number): string {
     if (Number.isInteger(value)) return value.toLocaleString();
     return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-
-/** Safe enum validation */
-export function safeEnum<T extends string>(
-    val: string | undefined,
-    allowed: readonly T[],
-    fallback: T,
-): T {
-    if (val && (allowed as readonly string[]).includes(val)) return val as T;
-    return fallback;
-}

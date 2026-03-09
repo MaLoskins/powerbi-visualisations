@@ -30,6 +30,17 @@ export function renderNode(
     const { nodeWidth: w, nodeHeight: h, nodeCornerRadius: r } = cfg.layout;
     const hasChildren = node.children.length > 0;
 
+    /* ── Clip path to prevent text overflow beyond node bounds ── */
+    const clipId = CSS_PREFIX + "clip-" + node.id.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const defs = g.append("defs");
+    defs.append("clipPath")
+        .attr("id", clipId)
+        .append("rect")
+        .attr("width", w)
+        .attr("height", h)
+        .attr("rx", r)
+        .attr("ry", r);
+
     /* ── Background rect ── */
     g.append("rect")
         .attr("class", CSS_PREFIX + "node-bg")
@@ -41,12 +52,15 @@ export function renderNode(
         .attr("stroke", cfg.node.nodeBorderColor)
         .attr("stroke-width", cfg.node.nodeBorderWidth);
 
+    /* ── Clipped content group for text elements ── */
+    const clipped = g.append("g").attr("clip-path", `url(#${clipId})`);
+
     /* ── Category label ── */
     const labelY = cfg.node.showVarianceBar
-        ? 16
+        ? h * 0.22
         : h * 0.35;
 
-    g.append("text")
+    clipped.append("text")
         .attr("class", CSS_PREFIX + "node-label")
         .attr("x", w / 2)
         .attr("y", labelY)
@@ -55,7 +69,7 @@ export function renderNode(
         .attr("font-size", cfg.node.nodeFontSize + "px")
         .attr("font-weight", "600")
         .attr("fill", cfg.node.nodeFontColor)
-        .text(truncateLabel(node.label, w, cfg.node.nodeFontSize));
+        .text(truncateLabel(node.label, w, cfg.node.nodeFontSize, hasChildren));
 
     /* ── Variance value line ── */
     const vColor = varianceColor(
@@ -65,7 +79,7 @@ export function renderNode(
         cfg.colors.neutralColor,
     );
 
-    let valueY = labelY + cfg.node.nodeFontSize + 4;
+    let valueY = labelY + cfg.node.nodeFontSize + Math.round(h * 0.04);
     const valueParts: string[] = [];
 
     if (cfg.node.showAbsoluteValue) {
@@ -76,7 +90,7 @@ export function renderNode(
     }
 
     if (valueParts.length > 0) {
-        g.append("text")
+        clipped.append("text")
             .attr("class", CSS_PREFIX + "node-value")
             .attr("x", w / 2)
             .attr("y", valueY)
@@ -87,15 +101,15 @@ export function renderNode(
             .attr("fill", vColor)
             .text(valueParts.join("  "));
 
-        valueY += cfg.node.valueFontSize + 2;
+        valueY += cfg.node.valueFontSize + Math.round(h * 0.03);
     }
 
     /* ── Variance bar ── */
     if (cfg.node.showVarianceBar && node.budget !== 0) {
-        const barPadding = 10;
+        const barPadding = Math.round(w * 0.06);
         const barW = w - barPadding * 2;
         const barH = cfg.node.barHeight;
-        const barY = h - barH - 6;
+        const barY = h - barH - Math.round(h * 0.08);
 
         /* Background track */
         g.append("rect")
@@ -125,9 +139,10 @@ export function renderNode(
 
     /* ── Expand/collapse indicator ── */
     if (hasChildren) {
-        const indicatorSize = 10;
-        const ix = w - indicatorSize - 6;
-        const iy = 6;
+        const indicatorSize = Math.round(Math.min(w, h) * 0.14);
+        const indicatorMargin = Math.round(Math.min(w, h) * 0.08);
+        const ix = w - indicatorSize - indicatorMargin;
+        const iy = indicatorMargin;
 
         g.append("text")
             .attr("class", CSS_PREFIX + "node-toggle")
@@ -135,10 +150,10 @@ export function renderNode(
             .attr("y", iy + indicatorSize / 2)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
-            .attr("font-size", "10px")
+            .attr("font-size", Math.max(9, Math.round(cfg.node.nodeFontSize * 0.85)) + "px")
             .attr("fill", cfg.node.nodeFontColor)
             .attr("opacity", 0.5)
-            .text(node.isExpanded ? "−" : "+");
+            .text(node.isExpanded ? "-" : "+");
     }
 
     /* ── Event handlers ── */
@@ -190,8 +205,18 @@ export function applyNodeSelectionStyles(
 
 /* ── Helpers ── */
 
-function truncateLabel(label: string, maxWidth: number, fontSize: number): string {
-    const approxChars = Math.floor(maxWidth / (fontSize * 0.6));
+/**
+ * Truncate a label to fit within available pixel width.
+ * Accounts for horizontal padding and optional toggle indicator space.
+ * Toggle space and padding scale proportionally with node dimensions.
+ * Uses 0.55em as average character width for proportional fonts.
+ */
+function truncateLabel(label: string, nodeWidth: number, fontSize: number, hasChildren: boolean = false): string {
+    const hPadding = fontSize * 1.2;                     // ~0.6em padding each side
+    const toggleSpace = hasChildren ? Math.round(nodeWidth * 0.12) : 0;
+    const availableWidth = nodeWidth - hPadding - toggleSpace;
+    const avgCharWidth = fontSize * 0.55;
+    const approxChars = Math.max(3, Math.floor(availableWidth / avgCharWidth));
     if (label.length <= approxChars) return label;
-    return label.slice(0, approxChars - 1) + "…";
+    return label.slice(0, approxChars - 1) + "\u2026";
 }

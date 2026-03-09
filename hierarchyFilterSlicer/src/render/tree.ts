@@ -9,6 +9,7 @@
 import { HierarchyNode, RenderConfig, TreeCallbacks } from "../types";
 import { el, clearChildren } from "../utils/dom";
 import { renderCheckbox } from "./checkbox";
+import { ICON_EXPAND, ICON_COLLAPSE, ICON_FOLDER_OPEN, ICON_FOLDER_CLOSED, ICON_LEAF } from "../constants";
 
 /**
  * Render the visible tree rows into the provided body container.
@@ -63,7 +64,7 @@ function createRow(
     toggle.style.flexShrink = "0";
 
     if (!node.isLeaf && node.children.length > 0) {
-        toggle.textContent = node.isExpanded ? "▾" : "▸";
+        toggle.textContent = node.isExpanded ? ICON_COLLAPSE : ICON_EXPAND;
         toggle.style.cursor = "pointer";
         toggle.style.color = cfg.tree.fontColor;
         toggle.style.fontSize = (cfg.tree.fontSize + 2) + "px";
@@ -94,9 +95,9 @@ function createRow(
         icon.style.lineHeight = "1";
 
         if (node.isLeaf) {
-            icon.textContent = "📄";
+            icon.textContent = ICON_LEAF;
         } else {
-            icon.textContent = node.isExpanded ? "📂" : "📁";
+            icon.textContent = node.isExpanded ? ICON_FOLDER_OPEN : ICON_FOLDER_CLOSED;
         }
 
         row.appendChild(icon);

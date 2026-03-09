@@ -63,10 +63,10 @@ export function computeMinMaxLabelHeight(cfg: RenderConfig): number {
 export function computeTopLabelHeight(cfg: RenderConfig): number {
     let h = 0;
     if (cfg.label.showValueLabel && cfg.label.valueLabelPosition === "above") {
-        h = Math.max(h, cfg.label.valueFontSize + 4);
+        h = Math.max(h, cfg.label.valueFontSize + Math.max(2, Math.round(cfg.label.valueFontSize * 0.35)));
     }
     if (cfg.label.showTargetLabel && cfg.target.showTarget) {
-        h = Math.max(h, cfg.label.valueFontSize + 2);
+        h = Math.max(h, cfg.label.valueFontSize + Math.max(2, Math.round(cfg.label.valueFontSize * 0.2)));
     }
     return h;
 }
@@ -76,5 +76,5 @@ export function computeTopLabelHeight(cfg: RenderConfig): number {
  */
 export function computeVerticalCategoryHeight(cfg: RenderConfig): number {
     if (!cfg.layout.showCategoryLabels || cfg.layout.orientation !== "vertical") return 0;
-    return cfg.layout.categoryFontSize + 8;
+    return cfg.layout.categoryFontSize + Math.max(4, Math.round(cfg.layout.categoryFontSize * 0.6));
 }

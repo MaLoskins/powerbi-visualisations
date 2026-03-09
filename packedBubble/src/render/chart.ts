@@ -100,8 +100,6 @@ export function scaffoldSVG(
     const svg = select(svgEl);
     svg.selectAll("*").remove();
 
-    svg.attr("width", width).attr("height", height);
-
     /* Transparent background for click-to-deselect */
     svg.append("rect")
         .attr("class", `${CSS_PREFIX}-bg`)
@@ -123,7 +121,6 @@ export function scaffoldSVG(
 
 /** Resize the SVG and background rect */
 export function resizeSVG(svg: SVGSel, width: number, height: number): void {
-    svg.attr("width", width).attr("height", height);
     svg.select(`.${CSS_PREFIX}-bg`)
         .attr("width", width)
         .attr("height", height);

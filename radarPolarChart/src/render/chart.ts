@@ -146,7 +146,7 @@ export function renderChart(
                     .attr("r", cfg.chart.dotRadius)
                     .attr("fill", series.color)
                     .attr("stroke", "#fff")
-                    .attr("stroke-width", 1.5)
+                    .attr("stroke-width", Math.max(1, cfg.chart.dotRadius * 0.4))
                     .attr("data-series-index", series.index)
                     .attr("data-axis-index", c.point.axisIndex)
                     .on("click", (event: MouseEvent) => {
